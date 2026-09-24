@@ -137,30 +137,33 @@ fun HyperEdgeHeader(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.weight(1f)
             ) {
-                JmcSealLogo(modifier = Modifier.padding(end = 8.dp))
+                JmcSealLogo(modifier = Modifier.padding(end = 6.dp))
 
-                Column {
+                Column(modifier = Modifier.padding(end = 4.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = "HyperEdge",
                             color = Color.White,
                             fontWeight = FontWeight.Black,
-                            fontSize = 16.sp,
-                            letterSpacing = 0.5.sp
+                            fontSize = 15.sp,
+                            letterSpacing = 0.3.sp,
+                            maxLines = 1
                         )
                         Text(
-                            text = " | Smart City Jammu",
+                            text = " | Jammu",
                             color = SlateLight,
                             fontWeight = FontWeight.Medium,
-                            fontSize = 12.sp
+                            fontSize = 11.sp,
+                            maxLines = 1
                         )
                     }
                     Text(
-                        text = if (isHindi) "जम्मू स्मार्ट सिटी · वार्ड १२ फील्ड नोड #०४२" else "JMC CORRIDOR FIELD NODE · JMC-CORRIDOR-042",
+                        text = if (isHindi) "वार्ड १२ · फील्ड नोड #०४२" else "WARD 12 FIELD NODE · #042",
                         color = Color.White.copy(alpha = 0.7f),
                         fontSize = 8.sp,
                         fontFamily = FontFamily.Monospace,
-                        letterSpacing = 0.3.sp
+                        letterSpacing = 0.2.sp,
+                        maxLines = 1
                     )
                 }
             }

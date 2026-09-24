@@ -1,722 +1,421 @@
-import React, { useState } from 'react';
-import { GrievanceTicket, CivicCategory } from './types';
+import React, { useState, useEffect } from 'react';
 
-const INITIAL_TICKETS: GrievanceTicket[] = [
+export interface ReportItem {
+  id: string;
+  title: string;
+  category: string;
+  location: string;
+  timeAgo: string;
+  status: 'RESOLVED' | 'IN_PROGRESS' | 'QUEUED' | 'SYNCED';
+  imageUrl: string;
+  votes: number;
+  aiConfidence: number;
+  hash?: string;
+}
+
+const INITIAL_REPORTS: ReportItem[] = [
   {
-    id: "HYE-0052",
-    category: "Sadak (Potholes)",
-    categoryHi: "सड़क पर गड्ढा",
-    desc: "Severe asphalt rupture with stagnant water pool near Canal Road bend causing two-wheeler hazard.",
-    location: "Ward 12 · Trikuta Nagar Canal Rd, Sec 3",
-    coords: "32.7042° N, 74.8710° E",
-    status: "SEALED",
-    timestamp: "14:12:08 IST",
-    hash: "SHA-256: 8F2A-91C8",
-    clarity: "93.8% PASS",
-    sizeKb: 48
-  },
-  {
-    id: "HYE-0051",
-    category: "Kachra (Garbage)",
-    categoryHi: "सफाई एवं कचरा",
-    desc: "Corridor municipal bin overflow outside Sector 4 primary enclosure blocking carriageway.",
-    location: "Ward 12 · Trikuta Nagar, Sector 4",
-    coords: "32.7058° N, 74.8732° E",
+    id: "HYE-204",
+    title: "Deep Pothole with Rainwater Pool",
+    category: "Road & Pothole",
+    location: "Canal Rd, Sec 3, Trikuta Nagar",
+    timeAgo: "12m ago",
     status: "QUEUED",
-    timestamp: "13:38:40 IST",
-    hash: "SHA-256: 4A7B-89E1",
-    clarity: "95.2% PASS",
-    sizeKb: 52
+    imageUrl: "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=600&auto=format&fit=crop&q=80",
+    votes: 18,
+    aiConfidence: 94,
+    hash: "8F2A-91C8"
   },
   {
-    id: "HYE-0050",
-    category: "Nala (Drainage)",
-    categoryHi: "नाली जाम एवं जलभराव",
-    desc: "Stormwater conduit choked by silt and building debris. Blackwater backing up into lane 6.",
-    location: "Ward 14 · Gandhi Nagar Block C",
-    coords: "32.7115° N, 74.8690° E",
-    status: "QUEUED",
-    timestamp: "12:45:15 IST",
-    hash: "SHA-256: 9F1E-23B4",
-    clarity: "91.4% PASS",
-    sizeKb: 44
+    id: "HYE-203",
+    title: "Overflowing Municipal Dumpster",
+    category: "Sanitation",
+    location: "Near Sector 4 Market, Trikuta Nagar",
+    timeAgo: "45m ago",
+    status: "IN_PROGRESS",
+    imageUrl: "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=600&auto=format&fit=crop&q=80",
+    votes: 34,
+    aiConfidence: 96,
+    hash: "4A7B-89E1"
   },
   {
-    id: "HYE-0049",
-    category: "Bijli (Streetlights)",
-    categoryHi: "स्ट्रीट लाइट बंद",
-    desc: "Three consecutive sodium vapor lamps dead along park perimeter causing blind zone.",
-    location: "Ward 8 · Bakshi Nagar Enclave",
-    coords: "32.7290° N, 74.8510° E",
-    status: "SYNCED",
-    timestamp: "10:15:30 IST",
-    hash: "SHA-256: 3D4E-7B21",
-    clarity: "92.0% PASS",
-    sizeKb: 39
+    id: "HYE-198",
+    title: "Underground Water Main Leak",
+    category: "Water Supply",
+    location: "Main Chowk, Channi Himmat",
+    timeAgo: "2h ago",
+    status: "RESOLVED",
+    imageUrl: "https://images.unsplash.com/photo-1584467735815-f778f274e296?w=600&auto=format&fit=crop&q=80",
+    votes: 52,
+    aiConfidence: 91,
+    hash: "7A1C-99B2"
   },
   {
-    id: "HYE-0048",
-    category: "Paani (Water Leakage)",
-    categoryHi: "पेयजल पाइपलाइन रिसाव",
-    desc: "Underground main burst spraying continuous clean water over roadway macadam.",
-    location: "Ward 17 · Channi Himmat Main Chowk",
-    coords: "32.6934° N, 74.8912° E",
-    status: "SYNCED",
-    timestamp: "08:24:10 IST",
-    hash: "SHA-256: 7A1C-99B2",
-    clarity: "96.5% PASS",
-    sizeKb: 51
+    id: "HYE-195",
+    title: "Unlit Streetlight Fixtures (x3)",
+    category: "Streetlight",
+    location: "Lane 4, Bakshi Nagar",
+    timeAgo: "4h ago",
+    status: "RESOLVED",
+    imageUrl: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=600&auto=format&fit=crop&q=80",
+    votes: 9,
+    aiConfidence: 98,
+    hash: "3D4E-7B21"
   }
 ];
 
-const CATEGORIES: CivicCategory[] = [
-  { id: "sadak", en: "Sadak (Potholes)", hi: "सड़क पर गड्ढा", presetDesc: "Deep road pothole (approx 1.2m) with exposed base gravel near Canal Rd bend." },
-  { id: "kachra", en: "Kachra (Garbage)", hi: "सफाई एवं कचरा", presetDesc: "Solid municipal waste accumulation spilling outside Sector 4 enclosure." },
-  { id: "bijli", en: "Bijli (Streetlights)", hi: "स्ट्रीट लाइट बंद", presetDesc: "Overhead sodium fixture out, creating complete corridor blackout at dusk." },
-  { id: "paani", en: "Paani (Water Leakage)", hi: "पेयजल पाइपलाइन रिसाव", presetDesc: "High pressure potable pipeline joint leak flooding macadam street." },
-  { id: "nala", en: "Nala (Drainage)", hi: "नाली जाम एवं जलभराव", presetDesc: "Silt obstruction in stormwater culvert with backflow into residential lane." }
-];
-
 export const App: React.FC = () => {
-  const [isOnline, setIsOnline] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'citizen' | 'vault' | 'command'>('citizen');
+  const [currentTab, setCurrentTab] = useState<'home' | 'camera' | 'vault'>('home');
+  const [isOnline, setIsOnline] = useState(false);
+  const [reports, setReports] = useState<ReportItem[]>(INITIAL_REPORTS);
+  
+  // Camera viewfinder state
+  const [cameraScanning, setCameraScanning] = useState(true);
+  const [cameraDetected, setCameraDetected] = useState(false);
+  
+  // Sync state
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncProgress, setSyncProgress] = useState(0);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
 
-  // Citizen form state
-  const [selectedCat, setSelectedCat] = useState<CivicCategory>(CATEGORIES[0]);
-  const [desc, setDesc] = useState<string>(CATEGORIES[0].presetDesc);
-  const [cameraSimulated, setCameraSimulated] = useState<boolean>(false);
-  const [cameraLoading, setCameraLoading] = useState<boolean>(false);
-  const [toast, setToast] = useState<string | null>(null);
-
-  // Vault state
-  const [tickets, setTickets] = useState<GrievanceTicket[]>(INITIAL_TICKETS);
-  const [syncProgress, setSyncProgress] = useState<number>(0);
-  const [isSyncing, setIsSyncing] = useState<boolean>(false);
-  const [syncLogs, setSyncLogs] = useState<string[]>([
-    "[14:30:10] Hardware Keyring initialized: ChaCha20-Poly1305 AEAD",
-    "[14:30:12] On-device SQLite ledger active: /data/secure/hyperedge.db",
-    "[14:30:15] Signal status: DEAD-ZONE ACTIVE (Buffer mode engaged)"
-  ]);
-
-  const triggerToast = (msg: string) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3500);
+  const showToast = (msg: string) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(null), 3000);
   };
 
-  const handleSimulateCamera = () => {
-    setCameraLoading(true);
-    setTimeout(() => {
-      setCameraLoading(false);
-      setCameraSimulated(true);
-      triggerToast("✓ Edge AI Photometry & TFLite validation passed!");
-    }, 800);
-  };
+  useEffect(() => {
+    if (currentTab === 'camera') {
+      setCameraScanning(true);
+      setCameraDetected(false);
+      const timer = setTimeout(() => {
+        setCameraScanning(false);
+        setCameraDetected(true);
+      }, 900);
+      return () => clearTimeout(timer);
+    }
+  }, [currentTab]);
 
-  const handleSaveToVault = () => {
-    const newTicket: GrievanceTicket = {
-      id: `HYE-00${tickets.length + 48}`,
-      category: selectedCat.en,
-      categoryHi: selectedCat.hi,
-      desc: desc || selectedCat.presetDesc,
-      location: "Ward 12 · Trikuta Nagar, Sector 4",
-      coords: "32.7058° N, 74.8732° E",
-      status: "SEALED",
-      timestamp: new Date().toLocaleTimeString('en-IN', { hour12: false }) + " IST",
-      hash: `SHA-256: ${(Math.random() * 0xFFFFFF << 0).toString(16).toUpperCase()}`,
-      clarity: "93.8% PASS",
-      sizeKb: 47
+  const handleSaveReportFromCamera = () => {
+    const newReport: ReportItem = {
+      id: `HYE-${Math.floor(205 + Math.random() * 50)}`,
+      title: "Asphalt Fissure & Road Rut",
+      category: "Road & Pothole",
+      location: "Sector 4, Trikuta Nagar (Ward 12)",
+      timeAgo: "Just now",
+      status: isOnline ? "SYNCED" : "QUEUED",
+      imageUrl: "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=600&auto=format&fit=crop&q=80",
+      votes: 1,
+      aiConfidence: 94,
+      hash: "9C4D-22E5"
     };
-
-    setTickets([newTicket, ...tickets]);
-    setCameraSimulated(false);
-    triggerToast("🔒 Ticket Sealed & Committed to ChaCha20 Encrypted SQLite Ledger!");
-    setActiveTab('vault');
+    setReports([newReport, ...reports]);
+    showToast("✓ Encrypted & stored in ChaCha20 Offline Vault");
+    setCurrentTab('vault');
   };
 
-  const handleTriggerSync = () => {
+  const handleSyncVault = () => {
     if (!isOnline) {
-      triggerToast("⚠ Signal is in Dead-Zone. Toggle to SIGNAL RESTORED first!");
+      showToast("⚠ No Signal. Switch toggle to 4G Online first!");
       return;
     }
-
     setIsSyncing(true);
-    setSyncProgress(15);
-    setSyncLogs(prev => ["[14:40:01] Initiating JMC Central Handshake...", ...prev]);
-
-    setTimeout(() => {
-      setSyncProgress(45);
-      setSyncLogs(prev => ["[14:40:02] Assembling ChaCha20 batch payload (144 KB)...", ...prev]);
-    }, 800);
-
-    setTimeout(() => {
-      setSyncProgress(80);
-      setSyncLogs(prev => ["[14:40:03] Delta-sync packets dispatched over JMC 4G backbone...", ...prev]);
-    }, 1600);
-
+    setSyncProgress(25);
+    setTimeout(() => setSyncProgress(60), 600);
+    setTimeout(() => setSyncProgress(90), 1200);
     setTimeout(() => {
       setSyncProgress(100);
       setIsSyncing(false);
-      setTickets(tickets.map(t => ({ ...t, status: 'SYNCED' })));
-      setSyncLogs(prev => [
-        "[14:40:04] Central Municipal ACK_JMC_9981 confirmed. 52/52 Tickets Reconciled!",
-        ...prev
-      ]);
-      triggerToast("✔ All local cached records synchronized with JMC Command Cloud!");
-    }, 2400);
+      setReports(reports.map(r => ({ ...r, status: r.status === 'QUEUED' ? 'SYNCED' : r.status })));
+      showToast("✓ All queued reports uploaded to JMC Cloud!");
+    }, 1800);
   };
 
-  const cachedCount = tickets.filter(t => t.status !== 'SYNCED').length;
+  const queuedCount = reports.filter(r => r.status === 'QUEUED').length;
 
   return (
-    <div className="min-h-screen max-w-4xl mx-auto flex flex-col border-x border-[#0F2B46] bg-[#FAF6EE] shadow-2xl relative font-sans text-[#0F2B46]">
+    <div className="w-full max-w-md h-screen bg-[#F9FAFB] shadow-2xl flex flex-col relative overflow-hidden text-slate-800 antialiased mx-auto border-x border-slate-200">
       
-      {/* Paper Grain Overlay */}
-      <div className="absolute inset-0 bg-[radial-gradient(#0F2B46_0.75px,transparent_0.75px)] [background-size:12px_12px] opacity-[0.035] pointer-events-none z-0"></div>
-
-      {/* 1. TOP STICKY STATUS BAR */}
-      <header className="sticky top-0 z-30 bg-[#0F2B46] text-white border-b border-[#0F2B46] shadow-sm">
-        <div className="p-3 px-4 flex flex-wrap items-center justify-between gap-2">
-          
-          {/* Brand */}
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-white border-2 border-[#E8760C] flex flex-col items-center justify-center font-mono font-black text-[#0F2B46] leading-none text-[9px]">
-              <span>JMC</span>
-              <span className="text-[6px] text-[#E8760C]">जम्मू</span>
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-black text-sm tracking-wide">HyperEdge</span>
-                <span className="text-xs text-slate-300 font-medium">| Smart City Jammu</span>
-              </div>
-              <div className="text-[9px] font-mono text-slate-300">
-                Team HyperEdge · Central University of Jammu
-              </div>
-            </div>
+      {/* 1. TOP NATIVE APP BAR */}
+      <header className="bg-[#0F2B46] text-white px-4 py-3 flex items-center justify-between shadow-md z-20">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-full bg-white flex flex-col items-center justify-center border-2 border-[#E8760C] text-[#0F2B46] font-bold leading-none shadow-sm">
+            <span className="text-[10px] tracking-tighter font-extrabold">JMC</span>
+            <span className="text-[5.5px] text-[#E8760C] -mt-0.5">जम्मू</span>
           </div>
-
-          {/* Interactive Signal Toggle */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsOnline(!isOnline)}
-              className={`px-3 py-1.5 rounded-[4px] font-mono text-xs font-black tracking-wider flex items-center gap-2 transition-all transform hover:scale-[1.02] border ${
-                isOnline 
-                  ? 'bg-[#1F9D55] text-white border-[#1F9D55]' 
-                  : 'bg-[#BE3A2B] text-white border-[#BE3A2B] -rotate-1'
-              }`}
-              title="Click to toggle network conditions"
-            >
-              <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
-              {isOnline ? "SIGNAL RESTORED (4G JMC Link)" : "OFFLINE MODE: ACTIVE (Dead-Zone)"}
-            </button>
+          <div>
+            <h1 className="text-base font-bold tracking-tight text-white leading-tight">HyperEdge</h1>
+            <p className="text-[10px] text-slate-300 font-medium leading-none">Jammu Smart City · Ward 12</p>
           </div>
         </div>
 
-        {/* Telemetry Sub-strip */}
-        <div className="bg-[#091A2B] px-4 py-1 flex items-center justify-between text-[10px] font-mono border-t border-slate-700/50 text-slate-300">
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1">
-              <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-[#1F9D55]' : 'bg-[#E8760C]'}`}></span>
-              SQLite Encrypted
-            </span>
-            <span className="text-[#E8760C] font-bold">ChaCha20-Poly1305</span>
-            <span className="hidden sm:inline text-slate-400">Hardware Keyring Sealed</span>
-          </div>
-          <div className="text-[#1F9D55] font-bold">
-            {isOnline ? "CORRIDOR 4G UP" : "STANDALONE MESH READY"}
-          </div>
-        </div>
+        <button
+          onClick={() => setIsOnline(!isOnline)}
+          className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm border ${
+            isOnline 
+              ? 'bg-[#1F9D55]/20 text-green-300 border-[#1F9D55]/40' 
+              : 'bg-[#BE3A2B]/25 text-red-300 border-[#BE3A2B]/50'
+          }`}
+        >
+          <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-[#1F9D55] animate-pulse' : 'bg-[#BE3A2B]'}`}></span>
+          <span className="text-[11px]">{isOnline ? "Online 4G" : "Offline"}</span>
+        </button>
       </header>
 
-      {/* 2. MAIN NAVIGATION TABS */}
-      <nav className="bg-white border-b border-[#0F2B46] sticky top-[69px] z-20 flex text-xs font-bold font-mono">
-        <button
-          onClick={() => setActiveTab('citizen')}
-          className={`flex-1 py-3 px-2 text-center border-r border-[#0F2B46] transition-colors flex flex-col sm:flex-row items-center justify-center gap-1 ${
-            activeTab === 'citizen'
-              ? 'bg-[#E8760C] text-white'
-              : 'bg-white text-[#0F2B46] hover:bg-slate-100'
-          }`}
-        >
-          <span>Citizen Portal</span>
-          <span className="text-[10px] opacity-80">(शिकायत दर्ज करें)</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('vault')}
-          className={`flex-1 py-3 px-2 text-center border-r border-[#0F2B46] transition-colors flex items-center justify-center gap-2 ${
-            activeTab === 'vault'
-              ? 'bg-[#E8760C] text-white'
-              : 'bg-white text-[#0F2B46] hover:bg-slate-100'
-          }`}
-        >
-          <span>Offline Vault & Sync</span>
-          <span className={`px-1.5 py-0.2 rounded-[4px] text-[10px] font-mono ${
-            activeTab === 'vault' ? 'bg-[#0F2B46] text-white' : 'bg-[#E8760C] text-white'
-          }`}>
-            {cachedCount}
+      {/* Dead-zone Banner */}
+      {!isOnline && (
+        <div className="bg-[#BE3A2B] text-white px-4 py-1.5 text-xs font-medium flex items-center justify-between shadow-inner">
+          <span className="flex items-center gap-1.5">
+            <span>Dead-Zone mode: SQLite ChaCha20 Active</span>
           </span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('command')}
-          className={`flex-1 py-3 px-2 text-center transition-colors flex items-center justify-center gap-1 ${
-            activeTab === 'command'
-              ? 'bg-[#E8760C] text-white'
-              : 'bg-white text-[#0F2B46] hover:bg-slate-100'
-          }`}
-        >
-          <span>JMC Command Console</span>
-          <span className="text-[10px] hidden sm:inline">(Ward 12)</span>
-        </button>
-      </nav>
-
-      {/* Toast Alert */}
-      {toast && (
-        <div className="fixed top-20 right-4 z-50 bg-[#0F2B46] text-white text-xs font-mono px-4 py-2.5 rounded-[4px] border-2 border-[#E8760C] shadow-lg flex items-center gap-2 animate-bounce">
-          <span>{toast}</span>
+          <span className="text-[10px] underline cursor-pointer" onClick={() => setIsOnline(true)}>Connect</span>
         </div>
       )}
 
-      {/* Main Container */}
-      <main className="p-4 sm:p-6 flex-1 z-10">
+      {/* Toast Alert */}
+      {toastMsg && (
+        <div className="absolute top-16 left-4 right-4 z-50 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-2 text-xs font-medium border border-slate-700 animate-fade-in">
+          <span>{toastMsg}</span>
+        </div>
+      )}
 
-        {/* SCREEN 1: CITIZEN PORTAL */}
-        {activeTab === 'citizen' && (
-          <div className="space-y-5">
-            
-            {/* Screen 1 Title */}
-            <div className="border-b border-[#0F2B46] pb-3 flex flex-wrap items-baseline justify-between gap-2">
+      {/* 2. SCROLLABLE BODY */}
+      <main className="flex-1 overflow-y-auto p-4 space-y-4 pb-24">
+        
+        {/* TAB 1: CITIZEN FEED */}
+        {currentTab === 'home' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xl sm:text-2xl font-black tracking-tight text-[#0F2B46]">
-                  File Grievance <span className="text-base text-slate-500 font-normal">/ शिकायत दर्ज करें</span>
-                </h2>
-                <p className="text-xs text-slate-600 font-mono mt-0.5">
-                  JMC Civic Form · Node JMC-CORRIDOR-042 · Ward 12 (Trikuta Nagar)
-                </p>
+                <h2 className="text-lg font-bold text-slate-900 tracking-tight">Ward 12 Feed</h2>
+                <p className="text-xs text-slate-500">Trikuta Nagar & Canal Road</p>
               </div>
-              <span className="px-2 py-1 rounded-[4px] bg-[#1F9D55] text-white text-[10px] font-mono font-black">
-                STANDALONE MESH SECURE
+              <span className="bg-slate-200/80 text-slate-700 text-xs px-2.5 py-1 rounded-full font-semibold">
+                {reports.length} Reports
               </span>
             </div>
 
-            {/* Bilingual Category Buttons */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs font-mono font-bold">
-                <span>1. SELECT GRIEVANCE DOMAIN (शिकायत श्रेणी चुनें)</span>
-                <span className="text-[#E8760C] text-[10px]">REQUIRED</span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                {CATEGORIES.map(cat => {
-                  const isSelected = selectedCat.id === cat.id;
-                  return (
-                    <button
-                      key={cat.id}
-                      onClick={() => {
-                        setSelectedCat(cat);
-                        setDesc(cat.presetDesc);
-                        setCameraSimulated(false);
-                      }}
-                      className={`p-3 text-left rounded-[4px] transition-all border ${
-                        isSelected
-                          ? 'bg-[#0F2B46] text-white border-[#E8760C] ring-2 ring-[#E8760C]/40'
-                          : 'bg-white text-[#0F2B46] border-[#0F2B46] hover:bg-slate-50'
-                      }`}
-                    >
-                      <div className="font-bold text-sm">{cat.en}</div>
-                      <div className={`text-xs ${isSelected ? 'text-slate-300' : 'text-slate-500'}`}>
-                        {cat.hi}
+            <div className="space-y-3">
+              {reports.map(item => {
+                const isQueued = item.status === 'QUEUED';
+                const isResolved = item.status === 'RESOLVED';
+                return (
+                  <div key={item.id} className="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col">
+                    <div className="h-36 w-full relative bg-slate-100 overflow-hidden">
+                      <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
+                      <div className="absolute top-2.5 left-2.5 bg-slate-900/80 text-white px-2 py-0.5 rounded-md text-[10px] font-semibold">
+                        {item.category}
                       </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* AI Camera HUD Simulator */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs font-mono font-bold">
-                <span>2. EDGE AI PHOTOMETRIC VALIDATION</span>
-                <span className="text-[#1F9D55] text-[10px]">ON-DEVICE NPU</span>
-              </div>
-
-              <div className="border border-[#0F2B46] rounded-[4px] bg-[#091A2B] text-white p-4 relative overflow-hidden">
-                <div className="relative min-h-[160px] flex flex-col justify-between">
-                  
-                  {/* Top HUD Info */}
-                  <div className="flex justify-between items-start text-[10px] font-mono">
-                    <div className="bg-[#0F2B46]/90 px-2 py-1 rounded-[4px] border border-slate-600">
-                      {cameraSimulated ? "✓ CLEAR PHOTOMETRY · NO BLUR" : "AWAITING SENSOR CAPTURE"}
+                      <div className="absolute top-2.5 right-2.5">
+                        {isQueued && (
+                          <span className="bg-[#E8760C] text-white px-2 py-0.5 rounded-md text-[10px] font-bold shadow-sm">
+                            Queued in Vault
+                          </span>
+                        )}
+                        {isResolved && (
+                          <span className="bg-[#1F9D55] text-white px-2 py-0.5 rounded-md text-[10px] font-bold shadow-sm">
+                            ✓ Resolved
+                          </span>
+                        )}
+                        {item.status === 'IN_PROGRESS' && (
+                          <span className="bg-blue-600 text-white px-2 py-0.5 rounded-md text-[10px] font-bold shadow-sm">
+                            In Progress
+                          </span>
+                        )}
+                        {item.status === 'SYNCED' && (
+                          <span className="bg-emerald-600 text-white px-2 py-0.5 rounded-md text-[10px] font-bold shadow-sm">
+                            Synced JMC
+                          </span>
+                        )}
+                      </div>
+                      <div className="absolute bottom-2 right-2.5 bg-black/65 text-white text-[9px] px-1.5 py-0.5 rounded font-mono">
+                        AI: {item.aiConfidence}% Verified
+                      </div>
                     </div>
-                    <div className="bg-[#E8760C] text-white font-black px-2 py-0.5 rounded-[4px] text-[9px]">
-                      {cameraSimulated ? "TFLite Model v2.4 (Local)" : "READY"}
-                    </div>
-                  </div>
 
-                  {/* AI Inspection Box */}
-                  {cameraSimulated ? (
-                    <div className="my-3 border-2 border-dashed border-[#1F9D55] bg-[#1F9D55]/10 p-3 rounded-[4px] flex flex-col sm:flex-row items-center justify-between gap-2">
+                    <div className="p-3.5 space-y-2">
                       <div>
-                        <span className="bg-[#1F9D55] text-white text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-[4px]">
-                          DETECTED: {selectedCat.en.toUpperCase()}
-                        </span>
-                        <div className="text-xs font-mono text-slate-200 mt-1">
-                          Clarity Score: <span className="text-[#1F9D55] font-bold">93.8% PASS</span> · Variance: 312.4
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-sm font-bold text-slate-900 leading-snug">{item.title}</h3>
+                          <span className="text-[10px] font-mono text-slate-400 font-semibold">{item.id}</span>
+                        </div>
+                        <div className="text-[11px] text-slate-500 mt-1">
+                          {item.location} · {item.timeAgo}
                         </div>
                       </div>
-                      <div className="text-right text-[10px] font-mono text-slate-300">
-                        <div>SHA-256: 8F2A-91C8-3D4E</div>
-                        <div className="text-[#E8760C]">0 DUPLICATES IN WARD BUFFER</div>
+                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                        <span>{item.votes} citizens impacted</span>
+                        <span className="text-[10px] font-mono text-slate-400">JMC Ward 12</span>
                       </div>
                     </div>
-                  ) : (
-                    <div className="my-4 text-center text-slate-400 text-xs font-mono">
-                      [Tap "Simulate Camera" below to execute on-device blur variance & TFLite detection]
-                    </div>
-                  )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
-                  {/* Camera Bar */}
-                  <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-700/60 text-[10px] font-mono">
-                    <span>GPS LOCK: 32.7058° N, 74.8732° E</span>
-                    <button
-                      onClick={handleSimulateCamera}
-                      disabled={cameraLoading}
-                      className="px-3 py-1 bg-[#E8760C] hover:bg-[#d06909] text-white font-bold rounded-[4px] text-xs transition-colors"
-                    >
-                      {cameraLoading ? "Running Edge AI..." : cameraSimulated ? "Re-calibrate Photometry" : "📷 Simulate Camera"}
-                    </button>
+        {/* TAB 2: CAMERA VIEWFINDER */}
+        {currentTab === 'camera' && (
+          <div className="space-y-4 flex flex-col h-full">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900 tracking-tight">Camera Viewfinder</h2>
+              <p className="text-xs text-slate-500">Edge AI Photometry & TFLite Pothole Detection</p>
+            </div>
+
+            <div className="relative rounded-2xl overflow-hidden bg-black aspect-[3/4] border-2 border-slate-800 shadow-lg flex flex-col justify-between p-4">
+              <img 
+                src="https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=800&auto=format&fit=crop&q=80" 
+                alt="Road viewfinder"
+                className="absolute inset-0 w-full h-full object-cover opacity-80"
+              />
+
+              <div className="relative z-10 flex items-center justify-between text-white text-[11px] font-mono">
+                <div className="bg-black/60 px-2.5 py-1 rounded-md border border-white/10">
+                  GPS: 32.7058°N, 74.8732°E
+                </div>
+                <div className="bg-black/60 px-2 py-1 rounded-md text-[10px] text-[#E8760C] font-bold border border-white/10">
+                  TFLite NPU Active
+                </div>
+              </div>
+
+              <div className="relative z-10 my-auto flex flex-col items-center justify-center">
+                <div className="w-52 h-44 border-2 border-[#E8760C] rounded-lg relative flex flex-col justify-between p-2 shadow-[0_0_15px_rgba(232,118,12,0.4)]">
+                  <div className="self-start bg-[#E8760C] text-white text-[9px] font-bold px-2 py-0.5 rounded shadow">
+                    POTHOLE DETECTED · 94.2%
+                  </div>
+                  <div className="self-end bg-black/70 text-white text-[8px] font-mono px-1.5 py-0.5 rounded border border-white/20">
+                    Clarity: 93.8% PASS
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* GPS and Encryption particulars */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="border border-[#0F2B46] rounded-[4px] bg-white p-3 space-y-1">
-                <div className="text-[11px] font-mono font-bold text-[#0F2B46] flex items-center justify-between">
-                  <span>GEOSPATIAL EDGE LOCK (भू-स्थान)</span>
-                  <span className="text-[#1F9D55] text-[9px]">LOCKED</span>
-                </div>
-                <div className="text-xs font-bold text-[#0F2B46]">
-                  Ward 12 · Trikuta Nagar, Sector 4 / Zone 2
-                </div>
-                <div className="text-[10px] font-mono text-slate-500">
-                  GPS: 32.7058° N, 74.8732° E · Accuracy ±2.4m · Jammu Municipality
-                </div>
+                <span className="text-[10px] text-white/90 font-mono mt-2 bg-black/50 px-2 py-0.5 rounded">
+                  Ward 12 · Trikuta Nagar Sector 4
+                </span>
               </div>
 
-              <div className="border border-[#0F2B46] rounded-[4px] bg-white p-3 space-y-1">
-                <div className="text-[11px] font-mono font-bold text-[#0F2B46] flex items-center justify-between">
-                  <span>CRYPTOGRAPHIC ENVELOPE</span>
-                  <span className="text-[#E8760C] text-[9px]">HARDWARE SEAL</span>
+              <div className="relative z-10 bg-black/75 p-2.5 rounded-xl border border-white/10 text-white text-[11px] font-mono flex items-center justify-between">
+                <div>
+                  <div className="text-[#1F9D55] font-bold">✓ Clarity: 93.8% PASS</div>
+                  <div className="text-[9px] text-slate-300">SHA-256: 8F2A-91C8-3D4E</div>
                 </div>
-                <div className="text-xs font-bold text-[#0F2B46]">
-                  ChaCha20-Poly1305 AEAD + SHA-256
-                </div>
-                <div className="text-[10px] font-mono text-slate-500">
-                  Hardware Keyring Sealed · On-device Flash Storage
+                <div className="text-right">
+                  <div className="text-[9px] text-slate-400">Payload: 48 KB</div>
+                  <div className="text-[9px] text-[#E8760C] font-semibold">ChaCha20 Envelope</div>
                 </div>
               </div>
             </div>
 
-            {/* Description Textarea */}
-            <div className="space-y-1">
-              <label className="text-xs font-mono font-bold block text-[#0F2B46]">
-                PARTICULARS (विवरण):
-              </label>
-              <textarea
-                rows={3}
-                value={desc}
-                onChange={(e) => setDesc(e.target.value)}
-                className="w-full p-2.5 text-xs text-[#0F2B46] bg-white border border-[#0F2B46] rounded-[4px] focus:outline-none focus:ring-1 focus:ring-[#0F2B46]"
-              ></textarea>
-            </div>
-
-            {/* Big Submit Button */}
             <button
-              onClick={handleSaveToVault}
-              className="w-full py-3.5 bg-[#E8760C] hover:bg-[#cf6809] text-white font-mono font-black text-sm rounded-[4px] tracking-wider transition-transform active:scale-[0.99] border border-[#0F2B46] shadow-sm flex items-center justify-center gap-2"
+              onClick={handleSaveReportFromCamera}
+              className="w-full py-4 bg-[#E8760C] hover:bg-orange-600 active:scale-[0.98] text-white font-bold text-sm rounded-xl shadow-lg transition-all"
             >
-              <span>🔒 SAVE TO CHACHA20 ENCRYPTED VAULT</span>
+              Secure in Offline Vault
             </button>
           </div>
         )}
 
-        {/* SCREEN 2: OFFLINE VAULT & SYNC */}
-        {activeTab === 'vault' && (
-          <div className="space-y-5">
-            
-            {/* Header with Rubber Stamp */}
-            <div className="border-b border-[#0F2B46] pb-3 flex flex-wrap items-center justify-between gap-3 relative">
+        {/* TAB 3: OFFLINE VAULT */}
+        {currentTab === 'vault' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xl sm:text-2xl font-black tracking-tight text-[#0F2B46]">
-                  Offline Vault & Delta Sync <span className="text-base text-slate-500 font-normal">/ लोकल वॉल्ट</span>
-                </h2>
-                <p className="text-xs text-slate-600 font-mono mt-0.5">
-                  On-Device SQLite Cryptographic Ledger · Zero Cloud Blocking
-                </p>
+                <h2 className="text-lg font-bold text-slate-900 tracking-tight">Offline Vault</h2>
+                <p className="text-xs text-slate-500">ChaCha20 Encrypted Local Buffer</p>
               </div>
-
-              <div className="border-2 border-[#BE3A2B] text-[#BE3A2B] rotate-3 bg-[#BE3A2B]/10 font-mono font-black px-3 py-1 text-xs tracking-wider">
-                ★ SEALED · JMC CERTIFIED ★
-              </div>
+              <span className="bg-[#E8760C]/15 text-[#E8760C] font-bold text-xs px-2.5 py-1 rounded-full">
+                {queuedCount} Pending
+              </span>
             </div>
 
-            {/* Status Indicator */}
-            <div className={`p-3 rounded-[4px] border ${
-              isOnline 
-                ? 'bg-[#1F9D55]/10 border-[#1F9D55] text-[#1F9D55]' 
-                : 'bg-[#BE3A2B]/10 border-[#BE3A2B] text-[#BE3A2B]'
-            }`}>
-              <div className="flex items-center justify-between font-mono font-black text-xs">
-                <span className="flex items-center gap-2">
-                  <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-[#1F9D55]' : 'bg-[#BE3A2B]'}`}></span>
-                  {isOnline ? "SIGNAL RESTORED: READY TO PUSH DELTA PACKETS" : "DEAD-ZONE ACTIVE: RECORDS BUFFERED SAFELY IN LOCAL FLASH"}
-                </span>
-                <span className="text-[10px] underline cursor-pointer" onClick={() => setIsOnline(!isOnline)}>
-                  {isOnline ? "Simulate Dead-Zone" : "Simulate 4G Return"}
-                </span>
-              </div>
-            </div>
-
-            {/* Delta Sync Pipeline Action */}
-            <div className="border border-[#0F2B46] rounded-[4px] bg-white p-4 space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-sm space-y-3">
+              <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-xs font-mono font-bold text-[#0F2B46]">
-                    DELTA SYNC PIPELINE (Handshake ➔ Batching ➔ Transmitting ➔ Synced)
+                  <h3 className="text-sm font-bold text-slate-900">JMC Delta Sync Pipeline</h3>
+                  <p className="text-[11px] text-slate-500">
+                    {isOnline ? "4G link available to push buffered payloads" : "Waiting for network coverage in Ward 12"}
+                  </p>
+                </div>
+              </div>
+
+              {isSyncing && (
+                <div className="space-y-1.5 pt-1">
+                  <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                    <div className="bg-[#1F9D55] h-full transition-all duration-300 rounded-full" style={{ width: `${syncProgress}%` }}></div>
                   </div>
-                  <div className="text-[11px] text-slate-500 font-mono">
-                    {cachedCount} items pending central dispatch · {tickets.length * 48} KB total payload
+                </div>
+              )}
+
+              <button
+                onClick={handleSyncVault}
+                disabled={isSyncing || queuedCount === 0}
+                className={`w-full py-2.5 px-4 rounded-lg font-semibold text-xs transition-all ${
+                  queuedCount === 0 
+                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                    : isOnline
+                    ? 'bg-[#1F9D55] hover:bg-emerald-700 text-white shadow-md'
+                    : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
+                }`}
+              >
+                {isSyncing ? "Syncing..." : queuedCount === 0 ? "✓ All Local Records Synced" : isOnline ? `Upload ${queuedCount} Buffered Reports Now` : "Simulate 4G & Upload"}
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-xs font-bold text-slate-600 uppercase tracking-wider">Encrypted SQLite Records</h3>
+              {reports.map(item => (
+                <div key={item.id} className="bg-white rounded-xl border border-slate-200/80 p-3 shadow-sm flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <img src={item.imageUrl} alt={item.title} className="w-12 h-12 rounded-lg object-cover bg-slate-100 shrink-0" />
+                    <div>
+                      <div className="text-xs font-bold text-slate-900 leading-tight">{item.title}</div>
+                      <div className="text-[10px] text-slate-500 mt-0.5">{item.location}</div>
+                      <div className="text-[9px] font-mono text-slate-400 mt-0.5">SHA: {item.hash || "8F2A-91C8"} · 48 KB</div>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      item.status === 'QUEUED' ? 'bg-orange-100 text-[#E8760C]' : 'bg-emerald-100 text-[#1F9D55]'
+                    }`}>
+                      {item.status === 'QUEUED' ? 'Waiting' : 'Synced'}
+                    </span>
+                    <div className="text-[9px] text-slate-400 font-mono mt-1">{item.timeAgo}</div>
                   </div>
                 </div>
-
-                <button
-                  onClick={handleTriggerSync}
-                  disabled={isSyncing || cachedCount === 0}
-                  className={`px-4 py-2 rounded-[4px] font-mono font-bold text-xs transition-colors border ${
-                    cachedCount === 0
-                      ? 'bg-[#1F9D55] text-white border-[#1F9D55] cursor-default'
-                      : isOnline
-                      ? 'bg-[#E8760C] hover:bg-[#cf6809] text-white border-[#0F2B46]'
-                      : 'bg-slate-300 text-slate-600 border-slate-400 cursor-not-allowed'
-                  }`}
-                >
-                  {cachedCount === 0 ? "✔ All Synced" : isSyncing ? "Syncing..." : "⚡ Trigger Delta Sync"}
-                </button>
-              </div>
-
-              {/* Progress bar */}
-              <div className="w-full bg-slate-200 h-2.5 rounded-[4px] overflow-hidden border border-slate-300">
-                <div 
-                  className="bg-[#1F9D55] h-full transition-all duration-500 font-mono text-[8px] text-white text-center"
-                  style={{ width: `${cachedCount === 0 ? 100 : syncProgress}%` }}
-                ></div>
-              </div>
-            </div>
-
-            {/* Local Queued Tickets Table */}
-            <div className="border border-[#0F2B46] rounded-[4px] bg-white overflow-hidden shadow-sm">
-              <div className="bg-[#0F2B46] text-white px-3 py-2 font-mono font-bold text-xs flex justify-between items-center">
-                <span>LOCAL ENCRYPTED TICKETS ({tickets.length})</span>
-                <span className="text-[10px] text-slate-300">SQLite Table: `grievance_ledger`</span>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs font-mono">
-                  <thead className="bg-[#FAF6EE] border-b border-[#0F2B46] text-[#0F2B46]">
-                    <tr>
-                      <th className="p-2.5">ID</th>
-                      <th className="p-2.5">CATEGORY</th>
-                      <th className="p-2.5">LOCATION</th>
-                      <th className="p-2.5">TIMESTAMP</th>
-                      <th className="p-2.5">STATUS</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200">
-                    {tickets.map((t, idx) => {
-                      const isCritical = t.category.includes("Sadak") || t.category.includes("Paani");
-                      return (
-                        <tr key={t.id} className={idx % 2 === 0 ? "bg-white" : "bg-[#FAF6EE]/40"}>
-                          <td className="p-2.5 font-bold text-[#0F2B46]">{t.id}</td>
-                          <td className="p-2.5 font-medium">{t.category}</td>
-                          <td className="p-2.5 text-slate-600 text-[11px]">{t.location}</td>
-                          <td className="p-2.5 text-slate-500 text-[11px]">{t.timestamp}</td>
-                          <td className="p-2.5">
-                            <span className={`px-2 py-0.5 rounded-[4px] font-bold text-[10px] ${
-                              t.status === 'SYNCED'
-                                ? 'bg-[#1F9D55]/15 text-[#1F9D55] border border-[#1F9D55]'
-                                : isCritical
-                                ? 'bg-[#BE3A2B]/15 text-[#BE3A2B] border border-[#BE3A2B]'
-                                : 'bg-[#E8760C]/15 text-[#E8760C] border border-[#E8760C]'
-                            }`}>
-                              {t.status}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Live Terminal Log */}
-            <div className="space-y-1">
-              <div className="text-xs font-mono font-bold text-[#0F2B46]">
-                LIVE HARDWARE TELEMETRY LOGS:
-              </div>
-              <div className="bg-[#091A2B] text-slate-200 p-3 rounded-[4px] font-mono text-[11px] h-32 overflow-y-auto space-y-1 border border-[#0F2B46]">
-                {syncLogs.map((log, i) => (
-                  <div key={i} className={
-                    log.includes("ACK") || log.includes("Reconciled") 
-                      ? "text-[#1F9D55]" 
-                      : log.includes("DEAD-ZONE") 
-                      ? "text-[#BE3A2B]" 
-                      : "text-slate-300"
-                  }>
-                    {log}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* SCREEN 3: JMC COMMAND CONSOLE */}
-        {activeTab === 'command' && (
-          <div className="space-y-5">
-            
-            {/* Header with status badges */}
-            <div className="border-b border-[#0F2B46] pb-3 flex flex-wrap items-center justify-between gap-2">
-              <div>
-                <h2 className="text-xl sm:text-2xl font-black tracking-tight text-[#0F2B46]">
-                  JMC Command Console <span className="text-base text-slate-500 font-normal">/ नगर निगम कमांड</span>
-                </h2>
-                <p className="text-xs text-slate-600 font-mono mt-0.5">
-                  Ward 12 (Trikuta Nagar) Incident Overview · Smart City Jammu
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="px-2.5 py-1 rounded-[4px] text-[10px] font-mono font-black bg-[#1F9D55]/15 text-[#1F9D55] border border-[#1F9D55]">
-                  City Centre (4G): ONLINE
-                </span>
-                <span className="px-2.5 py-1 rounded-[4px] text-[10px] font-mono font-black bg-[#BE3A2B]/15 text-[#BE3A2B] border border-[#BE3A2B]">
-                  Hilly/Border Ward: DEAD-ZONE FALLBACK
-                </span>
-              </div>
-            </div>
-
-            {/* 4 Big Metrics Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 font-mono">
-              <div className="border border-[#0F2B46] rounded-[4px] bg-white p-3">
-                <div className="text-[10px] font-bold text-slate-500">TOTAL REPORTS</div>
-                <div className="text-4xl font-black text-[#0F2B46] mt-1">52</div>
-                <div className="text-[9px] text-[#1F9D55] font-bold mt-1">+14 cached local</div>
-              </div>
-
-              <div className="border border-[#0F2B46] rounded-[4px] bg-white p-3">
-                <div className="text-[10px] font-bold text-slate-500">CACHED IN VAULT</div>
-                <div className="text-4xl font-black text-[#E8760C] mt-1">{cachedCount}</div>
-                <div className="text-[9px] text-[#BE3A2B] font-bold mt-1">4 critical potholes</div>
-              </div>
-
-              <div className="border border-[#0F2B46] rounded-[4px] bg-white p-3">
-                <div className="text-[10px] font-bold text-slate-500">RESOLVED FIELD</div>
-                <div className="text-4xl font-black text-[#1F9D55] mt-1">38</div>
-                <div className="text-[9px] text-slate-500 font-bold mt-1">73.1% resolution</div>
-              </div>
-
-              <div className="border border-[#0F2B46] rounded-[4px] bg-white p-3">
-                <div className="text-[10px] font-bold text-slate-500">AVG SLA DISPATCH</div>
-                <div className="text-4xl font-black text-[#0F2B46] mt-1">18 <span className="text-sm font-normal text-slate-500">min</span></div>
-                <div className="text-[9px] text-slate-500 font-bold mt-1">Auto NPU Routing</div>
-              </div>
-            </div>
-
-            {/* Tawi Corridor GIS Map Schematic */}
-            <div className="border border-[#0F2B46] rounded-[4px] bg-white p-4 space-y-2">
-              <div className="flex justify-between items-center text-xs font-mono font-bold text-[#0F2B46]">
-                <span>WARD 12 TAWI CORRIDOR MAP SCHEMATIC</span>
-                <span className="text-[10px] text-slate-500">GPS Mesh Sync</span>
-              </div>
-
-              <div className="h-44 bg-[#EDE9DC] border border-[#0F2B46] rounded-[4px] relative overflow-hidden flex flex-col justify-between p-3 font-mono">
-                {/* Tawi River */}
-                <div className="absolute right-4 top-0 bottom-0 w-16 bg-[#98C5E2] border-x border-[#67A7CE] flex items-center justify-center transform rotate-6">
-                  <span className="text-[10px] font-black text-[#1E5275] tracking-widest -rotate-90">
-                    TAWI RIVER ──►
-                  </span>
-                </div>
-
-                {/* Roads */}
-                <div className="absolute left-6 top-8 right-24 h-2 bg-white border-y border-slate-500 transform -rotate-3"></div>
-                <div className="absolute left-20 top-0 bottom-0 w-2.5 bg-white border-x border-slate-500"></div>
-
-                {/* Street Labels */}
-                <div className="z-10 text-[9px] bg-white/90 border border-slate-400 px-1.5 py-0.5 rounded-[4px] inline-block self-start">
-                  Canal Rd
-                </div>
-                <div className="z-10 text-[9px] bg-white/90 border border-slate-400 px-1.5 py-0.5 rounded-[4px] inline-block self-center">
-                  Trikuta Nagar Rd
-                </div>
-
-                {/* Pins */}
-                <div className="z-10 flex gap-4">
-                  <span className="bg-[#BE3A2B] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-[4px] shadow">
-                    ⚠ HYE-0052 (Pothole)
-                  </span>
-                  <span className="bg-[#E8760C] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-[4px] shadow">
-                    🗑 HYE-0051 (Garbage)
-                  </span>
-                </div>
-
-                {/* YOU ARE HERE Marker */}
-                <div className="z-10 self-end bg-[#0F2B46] text-white text-[9px] font-bold px-2 py-0.5 rounded-[4px] flex items-center gap-1 border border-white">
-                  <span className="w-2 h-2 rounded-full bg-[#29B6F6] animate-ping"></span>
-                  YOU ARE HERE (Sec 4)
-                </div>
-              </div>
-            </div>
-
-            {/* Municipal Field Dispatch Logs */}
-            <div className="border border-[#0F2B46] rounded-[4px] bg-white p-3 space-y-2">
-              <div className="text-xs font-mono font-bold text-[#0F2B46]">
-                MUNICIPAL FIELD DISPATCH LOGS:
-              </div>
-
-              <div className="space-y-1.5 font-mono text-xs">
-                <div className="p-2 border border-slate-200 rounded-[4px] flex justify-between items-center bg-[#FAF6EE]/50">
-                  <div>
-                    <span className="font-bold text-[#0F2B46]">HYE-0052: Sadak (Potholes)</span>
-                    <div className="text-[10px] text-slate-500">Canal Rd bend · Assigned to Rapid Road Unit 4</div>
-                  </div>
-                  <span className="px-2 py-0.5 text-[9px] font-bold bg-[#BE3A2B]/15 text-[#BE3A2B] border border-[#BE3A2B]">
-                    PRIORITY 1
-                  </span>
-                </div>
-
-                <div className="p-2 border border-slate-200 rounded-[4px] flex justify-between items-center">
-                  <div>
-                    <span className="font-bold text-[#0F2B46]">HYE-0048: Paani (Water Leakage)</span>
-                    <div className="text-[10px] text-slate-500">Channi Himmat Chowk · Repaired by Water Works Dept</div>
-                  </div>
-                  <span className="px-2 py-0.5 text-[9px] font-bold bg-[#1F9D55]/15 text-[#1F9D55] border border-[#1F9D55]">
-                    RESOLVED
-                  </span>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="bg-[#0F2B46] text-white text-center py-2.5 px-4 text-[10px] font-mono border-t border-[#0F2B46] z-10">
-        <div>HyperEdge · Team HyperEdge · Central University of Jammu · Smart City Jammu</div>
-        <div className="text-slate-400 text-[8px] mt-0.5">v0.4.2 · build 128 · Offline-First Civic Framework</div>
-      </footer>
+      {/* 3. FIXED BOTTOM NAVIGATION BAR */}
+      <nav className="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-200/80 px-6 py-2 flex items-center justify-between z-30 shadow-md">
+        <button
+          onClick={() => setCurrentTab('home')}
+          className={`flex flex-col items-center gap-1 ${
+            currentTab === 'home' ? 'text-[#E8760C]' : 'text-slate-400 hover:text-slate-600'
+          }`}
+        >
+          <span className="text-[10px] font-semibold">Home</span>
+        </button>
+
+        <button
+          onClick={() => setCurrentTab('camera')}
+          className="flex flex-col items-center -mt-5"
+        >
+          <div className="w-12 h-12 rounded-full bg-[#E8760C] text-white shadow-lg flex items-center justify-center border-4 border-[#F9FAFB]">
+            <span className="text-lg">📷</span>
+          </div>
+          <span className="text-[10px] font-bold text-slate-700 mt-0.5">Report</span>
+        </button>
+
+        <button
+          onClick={() => setCurrentTab('vault')}
+          className={`flex flex-col items-center gap-1 ${
+            currentTab === 'vault' ? 'text-[#E8760C]' : 'text-slate-400 hover:text-slate-600'
+          }`}
+        >
+          <span className="text-[10px] font-semibold">My Vault ({queuedCount})</span>
+        </button>
+      </nav>
     </div>
   );
 };
