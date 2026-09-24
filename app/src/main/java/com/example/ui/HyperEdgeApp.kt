@@ -87,18 +87,19 @@ fun HyperEdgeApp(
                 .fillMaxWidth()
                 .background(CreamBackground)
         ) {
-            // FIX 5: Subtle paper grain / micro-texture on the background (opacity 0.03)
+            // CHANGE 2: Subtle paper grain / noise texture overlay on cream background (opacity 0.04)
             Canvas(modifier = Modifier.fillMaxSize()) {
-                val step = 14.dp.toPx()
-                val radius = 0.8.dp.toPx()
-                var x = 4.dp.toPx()
+                val step = 10.dp.toPx()
+                var x = 2.dp.toPx()
                 while (x < size.width) {
-                    var y = 4.dp.toPx()
+                    var y = 2.dp.toPx()
                     while (y < size.height) {
+                        val jitterX = ((x.toInt() * 17 + y.toInt() * 31) % 5).toFloat()
+                        val jitterY = ((y.toInt() * 23 + x.toInt() * 11) % 5).toFloat()
                         drawCircle(
-                            color = Color(0x0C0F2B46), // 3% opacity paper grain
-                            radius = radius,
-                            center = Offset(x, y)
+                            color = Color(0x0A0F2B46), // 0.04 opacity organic stipple
+                            radius = 0.75.dp.toPx(),
+                            center = Offset(x + jitterX, y + jitterY)
                         )
                         y += step
                     }

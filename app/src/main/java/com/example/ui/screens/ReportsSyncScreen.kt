@@ -249,12 +249,12 @@ fun ReportsSyncScreen(
                                 )
                             }
 
-                            // FIX 5: Red "SEALED" rubber-stamp rotated over the ledger card
+                            // CHANGE 4: Red "SEALED" rubber-stamp rotated by 3 degrees over the ledger card
                             Box(
                                 modifier = Modifier
                                     .align(Alignment.CenterEnd)
                                     .padding(end = 6.dp)
-                                    .rotate(-6f)
+                                    .rotate(3f)
                                     .border(2.dp, RedError.copy(alpha = 0.85f), RoundedCornerShape(3.dp))
                                     .background(Color(0x15BE3A2B))
                                     .padding(horizontal = 8.dp, vertical = 3.dp)

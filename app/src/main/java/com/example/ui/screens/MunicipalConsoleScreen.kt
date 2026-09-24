@@ -173,6 +173,21 @@ fun MunicipalConsoleScreen(
 
             Spacer(modifier = Modifier.height(10.dp))
 
+            // CHANGE 4: Handwriting annotation pointing to "48 Total Reports"
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
+            ) {
+                Text(
+                    text = "↳ started here (baseline field triage)",
+                    color = OrangeAccent,
+                    fontSize = 11.sp,
+                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = FontFamily.Cursive
+                )
+            }
+
             // FIX 4: 4 Metric Cards (2x2 Grid) with ACTUALLY BIG 48sp Monospace Numbers
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(
@@ -529,9 +544,9 @@ fun MunicipalConsoleScreen(
                     drawPath(bahuRoad, Color(0xFF425567), style = Stroke(width = 1.dp.toPx()))
                 }
 
-                // Street Label Annotations (Rotated slightly to align with roads)
+                // Street Label Annotations (CHANGE 6: Canal Rd, Trikuta Nagar Rd, Sector 4, Tawi)
                 Text(
-                    text = "CANAL ROAD",
+                    text = "Canal Rd",
                     color = NavyPrimary,
                     fontSize = 8.sp,
                     fontWeight = FontWeight.Bold,
@@ -543,7 +558,7 @@ fun MunicipalConsoleScreen(
                 )
 
                 Text(
-                    text = "TRIKUTA NAGAR MAIN RD",
+                    text = "Trikuta Nagar Rd",
                     color = NavyPrimary,
                     fontSize = 8.sp,
                     fontWeight = FontWeight.Bold,
@@ -555,7 +570,19 @@ fun MunicipalConsoleScreen(
                 )
 
                 Text(
-                    text = "TAWI RIVER ──►",
+                    text = "Sector 4",
+                    color = SlateSecondary,
+                    fontSize = 7.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.Monospace,
+                    modifier = Modifier
+                        .padding(top = 118.dp, start = 60.dp)
+                        .background(Color.White.copy(alpha = 0.7f))
+                        .padding(horizontal = 2.dp)
+                )
+
+                Text(
+                    text = "Tawi ──►",
                     color = Color(0xFF1E5275),
                     fontSize = 9.sp,
                     fontWeight = FontWeight.Black,

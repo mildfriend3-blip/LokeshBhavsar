@@ -275,7 +275,16 @@ fun SyncQueueScreen(
                         trackColor = Color(0xFFE9E5DC),
                     )
 
-                    Spacer(modifier = Modifier.height(6.dp))
+                    // CHANGE 5: Small italic grey text below progress bar
+                    Text(
+                        text = "swipe left to view individual packets",
+                        color = SlateSecondary,
+                        fontSize = 9.sp,
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                        modifier = Modifier.padding(top = 3.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),

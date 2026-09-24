@@ -151,11 +151,8 @@ fun SplashScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(bottom = 12.dp)
             ) {
-                Text(
-                    text = "🏛",
-                    fontSize = 24.sp
-                )
-                Spacer(modifier = Modifier.size(8.dp))
+                com.example.ui.components.JmcSealLogo(modifier = Modifier.size(32.dp))
+                Spacer(modifier = Modifier.size(10.dp))
                 Text(
                     text = "JAMMU MUNICIPAL CORPORATION",
                     color = Color.White.copy(alpha = 0.75f),
@@ -282,13 +279,21 @@ fun SplashScreen(
             }
 
             // Bottom-Right
-            Text(
-                text = "No Signal. No Problem.",
-                color = OrangeAccent,
-                fontSize = 13.sp,
-                fontStyle = FontStyle.Italic,
-                fontWeight = FontWeight.Bold
-            )
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = "No Signal. No Problem.",
+                    color = OrangeAccent,
+                    fontSize = 13.sp,
+                    fontStyle = FontStyle.Italic,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "v0.4.2 · build 128",
+                    color = Color.White.copy(alpha = 0.5f),
+                    fontSize = 8.sp,
+                    fontFamily = FontFamily.Monospace
+                )
+            }
         }
     }
 }

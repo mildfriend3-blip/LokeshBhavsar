@@ -6,7 +6,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -39,7 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
@@ -99,22 +98,23 @@ fun HyperEdgeHeader(
 ) {
     var activeTooltip by remember { mutableStateOf<String?>(null) }
 
+    // 2s expanding orange ring animation loop for OFFLINE badge
     val infiniteTransition = rememberInfiniteTransition(label = "pulseRing")
     val ringScale by infiniteTransition.animateFloat(
         initialValue = 1f,
-        targetValue = 1.35f,
+        targetValue = 1.38f,
         animationSpec = infiniteRepeatable(
             animation = tween(2000, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
+            repeatMode = RepeatMode.Restart
         ),
         label = "ringScale"
     )
     val ringAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.8f,
-        targetValue = 0.2f,
+        initialValue = 0.9f,
+        targetValue = 0f,
         animationSpec = infiniteRepeatable(
             animation = tween(2000, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
+            repeatMode = RepeatMode.Restart
         ),
         label = "ringAlpha"
     )
@@ -156,7 +156,7 @@ fun HyperEdgeHeader(
                         )
                     }
                     Text(
-                        text = if (isHindi) "जम्मू स्मार्ट सिटी · वार्ड १२ कॉरिडोर फील्ड नोड" else "JMC CORRIDOR FIELD NODE · JMC-CORRIDOR-042",
+                        text = if (isHindi) "जम्मू स्मार्ट सिटी · वार्ड १२ फील्ड नोड #०४२" else "JMC CORRIDOR FIELD NODE · JMC-CORRIDOR-042",
                         color = Color.White.copy(alpha = 0.7f),
                         fontSize = 8.sp,
                         fontFamily = FontFamily.Monospace,
@@ -165,12 +165,12 @@ fun HyperEdgeHeader(
                 }
             }
 
-            // Right: Language Switch + Pulsing Offline/Online Pill + Page Badge
+            // Right: Language Switch + Pulsing Offline/Online Pill (-2° rotated) + Page Badge
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                // Language Toggle "EN | हिं"
+                // Language Toggle "EN | हिं" (EN active, हिं inactive)
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(3.dp))
@@ -179,55 +179,71 @@ fun HyperEdgeHeader(
                         .clickable { onToggleLanguage() }
                         .padding(horizontal = 5.dp, vertical = 3.dp)
                 ) {
-                    Text(
-                        text = if (isHindi) "हिं | EN" else "EN | हिं",
-                        color = Color.White,
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.Monospace
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "EN",
+                            color = if (!isHindi) OrangeAccent else SlateLight,
+                            fontSize = 9.sp,
+                            fontWeight = if (!isHindi) FontWeight.Black else FontWeight.Normal,
+                            fontFamily = FontFamily.Monospace
+                        )
+                        Text(
+                            text = " | ",
+                            color = Color.White.copy(alpha = 0.5f),
+                            fontSize = 8.sp
+                        )
+                        Text(
+                            text = "हिं",
+                            color = if (isHindi) OrangeAccent else SlateLight,
+                            fontSize = 9.sp,
+                            fontWeight = if (isHindi) FontWeight.Black else FontWeight.Normal
+                        )
+                    }
                 }
 
-                // Signal Simulation Pill with Pulsing Ring & Slight Organic Rotation (-1.5°)
-                Box(
-                    modifier = Modifier
-                        .rotate(if (!isOnline) -1.5f else 0f)
-                        .clip(RoundedCornerShape(3.dp))
-                        .background(if (isOnline) GreenSuccess else RedError)
-                        .clickable { onToggleOnline() }
-                        .padding(horizontal = 6.dp, vertical = 4.dp)
-                        .testTag("signal_toggle_button")
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(3.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            if (!isOnline) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(10.dp)
-                                        .border(
-                                            width = 1.dp,
-                                            color = Color.White.copy(alpha = ringAlpha),
-                                            shape = CircleShape
-                                        )
+                // Signal Simulation Pill with Orange Ring Animation & -2 degrees rotation
+                Box(contentAlignment = Alignment.Center) {
+                    if (!isOnline) {
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .rotate(-2f)
+                                .scale(ringScale)
+                                .border(
+                                    width = 1.2.dp,
+                                    color = OrangeAccent.copy(alpha = ringAlpha),
+                                    shape = RoundedCornerShape(3.dp)
                                 )
-                            }
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .rotate(if (!isOnline) -2f else 0f) // CHANGE 4: -2 degrees rotation
+                            .clip(RoundedCornerShape(3.dp))
+                            .background(if (isOnline) GreenSuccess else RedError)
+                            .clickable { onToggleOnline() }
+                            .padding(horizontal = 6.dp, vertical = 4.dp)
+                            .testTag("signal_toggle_button")
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(3.dp)
+                        ) {
                             Icon(
                                 imageVector = if (isOnline) Icons.Default.SignalCellularAlt else Icons.Default.SignalCellularConnectedNoInternet0Bar,
                                 contentDescription = if (isOnline) "Simulate Signal" else "Offline Dead-Zone",
                                 tint = Color.White,
                                 modifier = Modifier.size(11.dp)
                             )
+                            Text(
+                                text = if (isOnline) "ONLINE" else "OFFLINE",
+                                color = Color.White,
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Black,
+                                fontFamily = FontFamily.Monospace
+                            )
                         }
-                        Text(
-                            text = if (isOnline) "ONLINE" else "OFFLINE",
-                            color = Color.White,
-                            fontSize = 9.sp,
-                            fontWeight = FontWeight.Black,
-                            fontFamily = FontFamily.Monospace
-                        )
                     }
                 }
 
@@ -325,14 +341,14 @@ fun HyperEdgeHeader(
     // Interactive Technical Tooltip Dialog
     if (activeTooltip != null) {
         val title = when (activeTooltip) {
-            "sqlite" -> "SQLite On-Device Cryptographic Store"
-            "chacha20" -> "ChaCha20-Poly1305 AEAD Encryption"
-            else -> "Jammu Autonomous Mesh Protocol"
+            "sqlite" -> "Encrypted on-device database"
+            "chacha20" -> "Military-grade encryption"
+            else -> "Autonomous Mesh Protocol"
         }
         val description = when (activeTooltip) {
-            "sqlite" -> "Local flash database persistence. Every citizen grievance record is immutably stored on the Android device prior to any network attempts, ensuring zero data loss in signal dead zones."
-            "chacha20" -> "Authenticated Encryption with Associated Data (AEAD). Protects photographic evidence, GPS telemetry, and audio notes with Android Hardware Keyring backing."
-            else -> "Zero-infrastructure opportunistic synchronizer. Automatically initiates peer-to-peer Wi-Fi Direct and BLE mesh handshakes when encountering municipal transit or JMC corridor routers."
+            "sqlite" -> "Encrypted on-device database: Every civic complaint is immutably written to onboard flash storage before any remote network call is made. Zero data loss in signal dead zones."
+            "chacha20" -> "Military-grade encryption: ChaCha20-Poly1305 AEAD authenticated cipher protects citizen photos, GPS coordinates, and voice notes with hardware keyring backing."
+            else -> "Autonomous peer-to-peer mesh sync: Dispatches delta payloads opportunistically to nearby municipal transit nodes and field routers."
         }
 
         AlertDialog(
@@ -368,19 +384,27 @@ fun HyperEdgeHeader(
 fun HyperEdgeFooter(
     modifier: Modifier = Modifier
 ) {
-    Box(
+    Column(
         modifier = modifier
             .fillMaxWidth()
             .background(NavyPrimary)
             .padding(vertical = 4.dp, horizontal = 8.dp),
-        contentAlignment = Alignment.Center
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = "HyperEdge · Team HyperEdge · Smart City Jammu",
-            color = Color.White.copy(alpha = 0.75f),
+            color = Color.White.copy(alpha = 0.85f),
             fontSize = 9.sp,
             fontWeight = FontWeight.Medium,
             letterSpacing = 0.4.sp
+        )
+        // CHANGE 5: "v0.4.2 · build 128" tiny grey text at the very bottom
+        Text(
+            text = "v0.4.2 · build 128",
+            color = SlateLight.copy(alpha = 0.7f),
+            fontSize = 8.sp,
+            fontFamily = FontFamily.Monospace,
+            letterSpacing = 0.5.sp
         )
     }
 }
@@ -391,13 +415,14 @@ fun RuggedCard(
     backgroundColor: Color = Color.White,
     borderColor: Color = CardBorderNavy,
     borderWidth: Float = 1f,
+    cornerRadius: Int = 4,
     content: @Composable () -> Unit
 ) {
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .border(width = borderWidth.dp, color = borderColor, shape = RoundedCornerShape(4.dp))
-            .clip(RoundedCornerShape(4.dp))
+            .border(width = borderWidth.dp, color = borderColor, shape = RoundedCornerShape(cornerRadius.dp))
+            .clip(RoundedCornerShape(cornerRadius.dp))
             .background(backgroundColor)
             .padding(12.dp)
     ) {

@@ -424,7 +424,7 @@ fun FileGrievanceScreen(
                     )
                 }
 
-                // Top-Left Badge: Clear Photometry
+                // Top-Left Badge: Clear Photometry (No emoji, vector icon)
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopStart)
@@ -433,9 +433,36 @@ fun FileGrievanceScreen(
                         .background(NavyDark.copy(alpha = 0.9f))
                         .padding(horizontal = 6.dp, vertical = 3.dp)
                 ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            tint = GreenSuccess,
+                            modifier = Modifier.size(10.dp)
+                        )
+                        Spacer(modifier = Modifier.width(3.dp))
+                        Text(
+                            text = "CLEAR PHOTOMETRY · NO BLUR",
+                            color = GreenSuccess,
+                            fontSize = 8.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
+                }
+
+                // CHANGE 9: Real camera timestamp stamp in bottom-right corner
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(bottom = 26.dp, end = 8.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(Color.Black.copy(alpha = 0.7f))
+                        .padding(horizontal = 5.dp, vertical = 2.dp)
+                ) {
                     Text(
-                        text = "✓ CLEAR PHOTOMETRY · NO BLUR",
-                        color = GreenSuccess,
+                        text = "14:32:08 IST · Ward 12",
+                        color = Color(0xFFFFD54F), // Amber camera stamp
                         fontSize = 8.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = FontFamily.Monospace
@@ -533,7 +560,7 @@ fun FileGrievanceScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // SECTION 3: LOCATION FIELD (Auto-locked)
+            // SECTION 3: LOCATION FIELD (Auto-locked - CHANGE 4: slightly indented by 5dp)
             Text(
                 text = "3. GEOSPATIAL EDGE LOCK",
                 color = NavyPrimary,
@@ -541,7 +568,7 @@ fun FileGrievanceScreen(
                 fontWeight = FontWeight.Black,
                 fontFamily = FontFamily.Monospace,
                 letterSpacing = 0.5.sp,
-                modifier = Modifier.padding(bottom = 4.dp)
+                modifier = Modifier.padding(start = 5.dp, bottom = 4.dp)
             )
 
             RuggedCard(backgroundColor = Color(0xFFFBF8F2)) {
