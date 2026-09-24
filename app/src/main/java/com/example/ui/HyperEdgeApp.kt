@@ -9,15 +9,20 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -32,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -39,11 +45,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ui.components.HyperEdgeBottomNav
 import com.example.ui.components.MobileTab
+import com.example.ui.screens.CreamBg
 import com.example.ui.screens.DashboardScreen
+import com.example.ui.screens.NavyBrand
 import com.example.ui.screens.OfflineVaultScreen
+import com.example.ui.screens.OrangeSingle
 import com.example.ui.screens.ReportIssueScreen
+import com.example.ui.screens.SlateInactive
 import com.example.ui.theme.GreenSuccess
-import com.example.ui.theme.OrangeAccent
 
 @Composable
 fun HyperEdgeApp(
@@ -54,48 +63,54 @@ fun HyperEdgeApp(
     val isSyncing by viewModel.isSyncing.collectAsStateWithLifecycle()
     val currentToast by viewModel.currentToast.collectAsStateWithLifecycle()
 
-    var activeTab by remember { mutableStateOf(MobileTab.DASHBOARD) }
-    val queuedCount = reports.count { it.status in listOf("PENDING", "SEALED", "SYNCING") }
+    var activeTab by remember { mutableStateOf(MobileTab.HOME) }
+    val draftsCount = 4
 
     Scaffold(
         bottomBar = {
             HyperEdgeBottomNav(
                 currentTab = activeTab,
-                queuedCount = queuedCount,
+                draftsCount = draftsCount,
                 onSelectTab = { selectedTab ->
                     activeTab = selectedTab
                 }
             )
-        }
+        },
+        containerColor = CreamBg
     ) { innerPadding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .background(CreamBg)
         ) {
             when (activeTab) {
-                MobileTab.DASHBOARD -> {
+                MobileTab.HOME -> {
                     DashboardScreen(
                         isOnline = isOnline,
-                        onToggleOnline = { viewModel.toggleOnline() },
-                        onReportIssueClick = { activeTab = MobileTab.REPORT }
+                        onToggleOnline = { viewModel.toggleOnline() }
                     )
                 }
                 MobileTab.REPORT -> {
                     ReportIssueScreen(
-                        onBackClick = { activeTab = MobileTab.DASHBOARD },
+                        onBackClick = { activeTab = MobileTab.HOME },
                         onSaveToVault = { newReport ->
                             viewModel.saveAndEncryptReport(newReport)
-                            activeTab = MobileTab.VAULT
+                            activeTab = MobileTab.DRAFTS
                         }
                     )
                 }
-                MobileTab.VAULT -> {
+                MobileTab.DRAFTS -> {
                     OfflineVaultScreen(
                         reports = reports,
                         isOnline = isOnline,
                         isSyncing = isSyncing,
                         onSyncNow = { viewModel.simulateSignalReturnAndSync() }
+                    )
+                }
+                MobileTab.PROFILE -> {
+                    ProfilePlaceholder(
+                        onBack = { activeTab = MobileTab.HOME }
                     )
                 }
             }
@@ -111,18 +126,18 @@ fun HyperEdgeApp(
             ) {
                 currentToast?.let { toast ->
                     val (bgColor, icon) = when (toast.type) {
-                        ToastType.SUCCESS -> Color(0xFF0F172A) to Icons.Default.CheckCircle
-                        ToastType.ERROR -> Color(0xFF0F172A) to Icons.Default.Error
-                        ToastType.WARNING -> Color(0xFF0F172A) to Icons.Default.Warning
+                        ToastType.SUCCESS -> NavyBrand to Icons.Default.CheckCircle
+                        ToastType.ERROR -> NavyBrand to Icons.Default.Error
+                        ToastType.WARNING -> NavyBrand to Icons.Default.Warning
                     }
 
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .shadow(elevation = 6.dp, shape = RoundedCornerShape(10.dp))
-                            .clip(RoundedCornerShape(10.dp))
+                            .shadow(elevation = 4.dp, shape = RoundedCornerShape(4.dp))
+                            .clip(RoundedCornerShape(4.dp))
                             .background(bgColor)
-                            .border(1.dp, Color(0xFF334155), RoundedCornerShape(10.dp))
+                            .border(1.dp, NavyBrand, RoundedCornerShape(4.dp))
                             .padding(horizontal = 14.dp, vertical = 10.dp)
                     ) {
                         Row(
@@ -132,7 +147,7 @@ fun HyperEdgeApp(
                             Icon(
                                 imageVector = icon,
                                 contentDescription = null,
-                                tint = if (toast.type == ToastType.SUCCESS) GreenSuccess else OrangeAccent,
+                                tint = if (toast.type == ToastType.SUCCESS) GreenSuccess else OrangeSingle,
                                 modifier = Modifier.size(16.dp)
                             )
                             Text(
@@ -143,6 +158,76 @@ fun HyperEdgeApp(
                             )
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ProfilePlaceholder(
+    onBack: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(CreamBg)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text(
+            text = "Citizen Profile",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.ExtraBold,
+            color = NavyBrand
+        )
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .shadow(1.dp, RoundedCornerShape(4.dp))
+                .clip(RoundedCornerShape(4.dp))
+                .border(1.dp, NavyBrand, RoundedCornerShape(4.dp))
+                .background(Color.White)
+                .padding(16.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(NavyBrand),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = null,
+                        tint = CreamBg,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+
+                Column {
+                    Text(
+                        text = "Field Officer #042",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = NavyBrand
+                    )
+                    Text(
+                        text = "Ward 12 · Trikuta Nagar Sub-Division",
+                        fontSize = 12.sp,
+                        color = SlateInactive
+                    )
+                    Text(
+                        text = "Device Node: JMC-CORRIDOR-042",
+                        fontSize = 10.sp,
+                        fontFamily = FontFamily.Monospace,
+                        color = OrangeSingle
+                    )
                 }
             }
         }

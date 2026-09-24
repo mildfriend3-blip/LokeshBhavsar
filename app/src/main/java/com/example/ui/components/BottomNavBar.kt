@@ -1,6 +1,7 @@
 package com.example.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,8 +16,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Archive
-import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,134 +31,179 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.theme.OrangeAccent
-import com.example.ui.theme.SlateSecondary
+import com.example.ui.screens.CreamBg
+import com.example.ui.screens.NavyBrand
+import com.example.ui.screens.OrangeSingle
+import com.example.ui.screens.SlateInactive
 
 enum class MobileTab {
-    DASHBOARD,
+    HOME,
     REPORT,
-    VAULT
+    DRAFTS,
+    PROFILE
 }
 
 @Composable
 fun HyperEdgeBottomNav(
     currentTab: MobileTab,
-    queuedCount: Int,
+    draftsCount: Int = 4,
     onSelectTab: (MobileTab) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Full width, koi inset box nahi, cream bg, 1px navy border-top
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(Color.White)
-            .shadow(elevation = 8.dp)
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .background(CreamBg)
         ) {
-            // Tab 1: Dashboard
-            val isDashboard = currentTab == MobileTab.DASHBOARD
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
+            // 1px navy border-top
+            Box(
                 modifier = Modifier
-                    .clickable { onSelectTab(MobileTab.DASHBOARD) }
-                    .padding(horizontal = 14.dp, vertical = 4.dp)
-                    .testTag("nav_tab_dashboard")
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Place,
-                    contentDescription = "Dashboard",
-                    tint = if (isDashboard) OrangeAccent else SlateSecondary,
-                    modifier = Modifier.size(22.dp)
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = "Dashboard",
-                    fontSize = 11.sp,
-                    fontWeight = if (isDashboard) FontWeight.Bold else FontWeight.Medium,
-                    color = if (isDashboard) OrangeAccent else SlateSecondary
-                )
-            }
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(NavyBrand)
+            )
 
-            // Tab 2: Center Floating Action Button (FAB) for Report Issue
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
+            // 64px content height
+            Row(
                 modifier = Modifier
-                    .offset(y = (-14).dp)
-                    .clickable { onSelectTab(MobileTab.REPORT) }
-                    .testTag("nav_tab_report")
+                    .fillMaxWidth()
+                    .height(64.dp)
+                    .padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.SpaceAround,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
+                // Tab 1: Home
+                val isHome = currentTab == MobileTab.HOME
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
-                        .size(52.dp)
-                        .shadow(elevation = 6.dp, shape = CircleShape)
-                        .clip(CircleShape)
-                        .background(OrangeAccent),
-                    contentAlignment = Alignment.Center
+                        .clickable { onSelectTab(MobileTab.HOME) }
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .testTag("nav_tab_home")
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Report Issue",
-                        tint = Color.White,
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = "Report",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF0F172A)
-                )
-            }
-
-            // Tab 3: My Vault
-            val isVault = currentTab == MobileTab.VAULT
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .clickable { onSelectTab(MobileTab.VAULT) }
-                    .padding(horizontal = 14.dp, vertical = 4.dp)
-                    .testTag("nav_tab_vault")
-            ) {
-                Box {
-                    Icon(
-                        imageVector = Icons.Default.Archive,
-                        contentDescription = "Offline Vault",
-                        tint = if (isVault) OrangeAccent else SlateSecondary,
+                        imageVector = Icons.Default.Home,
+                        contentDescription = "Home",
+                        tint = if (isHome) OrangeSingle else SlateInactive,
                         modifier = Modifier.size(22.dp)
                     )
-                    if (queuedCount > 0) {
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "Home",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = if (isHome) OrangeSingle else SlateInactive
+                    )
+                }
+
+                // Space allocated for center protruding FAB
+                Spacer(modifier = Modifier.size(56.dp))
+
+                // Tab 3: Drafts (with Badge 4)
+                val isDrafts = currentTab == MobileTab.DRAFTS
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .clickable { onSelectTab(MobileTab.DRAFTS) }
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .testTag("nav_tab_drafts")
+                ) {
+                    Box {
+                        Icon(
+                            imageVector = Icons.Default.Description,
+                            contentDescription = "Drafts",
+                            tint = if (isDrafts) OrangeSingle else SlateInactive,
+                            modifier = Modifier.size(22.dp)
+                        )
                         Box(
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
                                 .offset(x = 6.dp, y = (-4).dp)
                                 .size(16.dp)
                                 .clip(CircleShape)
-                                .background(OrangeAccent),
+                                .background(OrangeSingle),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = queuedCount.toString(),
+                                text = draftsCount.toString(),
                                 color = Color.White,
                                 fontSize = 9.sp,
                                 fontWeight = FontWeight.Bold
                             )
                         }
                     }
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "Drafts",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = if (isDrafts) OrangeSingle else SlateInactive
+                    )
                 }
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = "Sync Vault",
-                    fontSize = 11.sp,
-                    fontWeight = if (isVault) FontWeight.Bold else FontWeight.Medium,
-                    color = if (isVault) OrangeAccent else SlateSecondary
+
+                // Tab 4: Profile
+                val isProfile = currentTab == MobileTab.PROFILE
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .clickable { onSelectTab(MobileTab.PROFILE) }
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .testTag("nav_tab_profile")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = "Profile",
+                        tint = if (isProfile) OrangeSingle else SlateInactive,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "Profile",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = if (isProfile) OrangeSingle else SlateInactive
+                    )
+                }
+            }
+        }
+
+        // Center FAB: 56px orange #E8760C circle FAB, only 16px protruding above nav, with 4px cream ring
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .offset(y = (-16).dp)
+                .clickable { onSelectTab(MobileTab.REPORT) }
+                .testTag("nav_tab_report")
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(CircleShape)
+                    .border(width = 4.dp, color = CreamBg, shape = CircleShape)
+                    .background(OrangeSingle)
+                    .shadow(elevation = 2.dp, shape = CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Report",
+                    tint = Color.White,
+                    modifier = Modifier.size(28.dp)
                 )
             }
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = "Report",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Medium,
+                color = if (currentTab == MobileTab.REPORT) OrangeSingle else SlateInactive
+            )
         }
     }
 }
