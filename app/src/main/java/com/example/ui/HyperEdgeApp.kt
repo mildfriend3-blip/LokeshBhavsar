@@ -9,14 +9,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -43,12 +40,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ui.components.HyperEdgeBottomNav
 import com.example.ui.components.HyperEdgeHeader
 import com.example.ui.components.MobileTab
-import com.example.ui.screens.CitizenFeedScreen
 import com.example.ui.screens.OfflineVaultScreen
 import com.example.ui.screens.ReportIssueScreen
+import com.example.ui.screens.SignalDashboardScreen
 import com.example.ui.theme.GreenSuccess
 import com.example.ui.theme.OrangeAccent
-import com.example.ui.theme.RedError
 
 val MobileAppBg = Color(0xFFF9FAFB)
 
@@ -61,19 +57,21 @@ fun HyperEdgeApp(
     val isSyncing by viewModel.isSyncing.collectAsStateWithLifecycle()
     val currentToast by viewModel.currentToast.collectAsStateWithLifecycle()
 
-    var activeTab by remember { mutableStateOf(MobileTab.HOME) }
+    var activeTab by remember { mutableStateOf(MobileTab.SIGNAL_INFO) }
     val queuedCount = reports.count { it.status in listOf("PENDING", "SEALED", "SYNCING") }
 
     Scaffold(
         topBar = {
-            // App Header: Just the text "HyperEdge | Ward 12" and a clean [Online/Offline] toggle button. NO OTHER TEXT.
+            // SCREEN 1 Top App Bar: 'HyperEdge | Jammu', 'ONLINE' status green badge, sync counter '2/8' orange badge.
+            // Subtext: 'SQLite Encrypted' and 'ChaCha20-Poly1305'
             HyperEdgeHeader(
                 isOnline = isOnline,
-                onToggleOnline = { viewModel.toggleOnline() }
+                onToggleOnline = { viewModel.toggleOnline() },
+                syncCountText = "2/8"
             )
         },
         bottomBar = {
-            // Bottom Nav: 3 standard mobile icons -> [Home] | [Report Issue (FAB)] | [My Vault]
+            // Bottom Nav: 3 standard mobile icons -> [Signal Info] | [Report Issue (FAB)] | [Offline Vault]
             HyperEdgeBottomNav(
                 currentTab = activeTab,
                 queuedCount = queuedCount,
@@ -92,14 +90,12 @@ fun HyperEdgeApp(
         ) {
             // Clean 3-Screen Native Architecture
             when (activeTab) {
-                MobileTab.HOME -> {
-                    CitizenFeedScreen(
-                        reports = reports,
-                        onReportClick = { /* View details */ },
-                        onNavigateToReport = { activeTab = MobileTab.REPORT }
-                    )
+                MobileTab.SIGNAL_INFO -> {
+                    // SCREEN 1: Dashboard / Signal Info
+                    SignalDashboardScreen()
                 }
                 MobileTab.REPORT -> {
+                    // SCREEN 2: Report Issue - Edge AI
                     ReportIssueScreen(
                         onSaveToVault = { newReport ->
                             viewModel.saveAndEncryptReport(newReport)
@@ -108,6 +104,7 @@ fun HyperEdgeApp(
                     )
                 }
                 MobileTab.VAULT -> {
+                    // SCREEN 3: Offline Vault
                     OfflineVaultScreen(
                         reports = reports,
                         isOnline = isOnline,

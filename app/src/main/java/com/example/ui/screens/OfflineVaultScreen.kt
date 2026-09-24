@@ -339,19 +339,28 @@ fun VaultTicketCard(
                         fontFamily = FontFamily.Monospace,
                         color = NavyPrimary
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "· ${ticket.category}",
-                        fontSize = 12.sp,
-                        color = Color(0xFF475569),
-                        fontWeight = FontWeight.Medium
-                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(Color(0xFFF1F5F9))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = "(ChaCha20 Encrypted)",
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace,
+                            color = OrangeAccent
+                        )
+                    }
                 }
 
                 Text(
-                    text = ticket.location,
-                    fontSize = 11.sp,
-                    color = SlateSecondary,
+                    text = "${ticket.category} · ${ticket.location}",
+                    fontSize = 12.sp,
+                    color = Color(0xFF334155),
+                    fontWeight = FontWeight.Medium,
                     maxLines = 1
                 )
 

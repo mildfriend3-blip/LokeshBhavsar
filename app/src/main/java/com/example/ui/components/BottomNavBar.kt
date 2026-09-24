@@ -17,8 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.SignalCellularAlt
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,7 +35,7 @@ import com.example.ui.theme.SlateLight
 import com.example.ui.theme.SlateSecondary
 
 enum class MobileTab {
-    HOME,
+    SIGNAL_INFO,
     REPORT,
     VAULT
 }
@@ -61,27 +60,27 @@ fun HyperEdgeBottomNav(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Tab 1: Home
-            val isHome = currentTab == MobileTab.HOME
+            // Tab 1: Signal Info / Dashboard
+            val isSignalInfo = currentTab == MobileTab.SIGNAL_INFO
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
-                    .clickable { onSelectTab(MobileTab.HOME) }
-                    .padding(horizontal = 16.dp, vertical = 4.dp)
-                    .testTag("nav_tab_home")
+                    .clickable { onSelectTab(MobileTab.SIGNAL_INFO) }
+                    .padding(horizontal = 14.dp, vertical = 4.dp)
+                    .testTag("nav_tab_signal")
             ) {
                 Icon(
-                    imageVector = Icons.Default.Home,
-                    contentDescription = "Home",
-                    tint = if (isHome) OrangeAccent else SlateSecondary,
+                    imageVector = Icons.Default.SignalCellularAlt,
+                    contentDescription = "Signal Info",
+                    tint = if (isSignalInfo) OrangeAccent else SlateSecondary,
                     modifier = Modifier.size(22.dp)
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = "Home",
+                    text = "Signal Info",
                     fontSize = 11.sp,
-                    fontWeight = if (isHome) FontWeight.Bold else FontWeight.Medium,
-                    color = if (isHome) OrangeAccent else SlateSecondary
+                    fontWeight = if (isSignalInfo) FontWeight.Bold else FontWeight.Medium,
+                    color = if (isSignalInfo) OrangeAccent else SlateSecondary
                 )
             }
 
@@ -123,13 +122,13 @@ fun HyperEdgeBottomNav(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .clickable { onSelectTab(MobileTab.VAULT) }
-                    .padding(horizontal = 16.dp, vertical = 4.dp)
+                    .padding(horizontal = 14.dp, vertical = 4.dp)
                     .testTag("nav_tab_vault")
             ) {
                 Box {
                     Icon(
                         imageVector = Icons.Default.Archive,
-                        contentDescription = "My Vault",
+                        contentDescription = "Offline Vault",
                         tint = if (isVault) OrangeAccent else SlateSecondary,
                         modifier = Modifier.size(22.dp)
                     )
@@ -154,7 +153,7 @@ fun HyperEdgeBottomNav(
                 }
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = "My Vault",
+                    text = "Offline Vault",
                     fontSize = 11.sp,
                     fontWeight = if (isVault) FontWeight.Bold else FontWeight.Medium,
                     color = if (isVault) OrangeAccent else SlateSecondary
