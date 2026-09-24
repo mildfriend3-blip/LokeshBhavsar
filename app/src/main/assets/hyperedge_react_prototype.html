@@ -3,60 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>HyperEdge | Jammu</title>
+  <title>HyperEdge</title>
   
-  <!-- Inter & JetBrains Mono Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-
-  <!-- Tailwind CSS CDN -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- React 18 & ReactDOM -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  
-  <!-- Babel for TSX parsing in browser -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brandNavy: '#0F2B46',
-            brandOrange: '#E8760C',
-            brandGreen: '#1F9D55',
-            brandRed: '#BE3A2B',
-            appBg: '#F9FAFB'
-          },
-          fontFamily: {
-            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-            mono: ['JetBrains Mono', 'ui-monospace', 'monospace']
-          }
-        }
-      }
-    }
-  </script>
   <style>
-    * {
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-    }
-    body {
-      background-color: #F3F4F6;
-      margin: 0;
-      padding: 0;
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    }
-    .no-scrollbar::-webkit-scrollbar {
-      display: none;
-    }
-    .no-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
+    * { -webkit-tap-highlight-color: transparent; user-select: none; }
+    body { background-color: #F0F2F5; margin: 0; padding: 0; font-family: 'Roboto', sans-serif; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-0 sm:p-4">
@@ -65,581 +25,235 @@
   <script type="text/babel" data-presets="react,typescript">
     const { useState } = React;
 
-    interface Ticket {
-      id: string;
-      category: string;
-      location: string;
-      timeAgo: string;
-      status: 'QUEUED' | 'SYNCED';
-      hash: string;
-      sizeKb: number;
-    }
-
-    const INITIAL_TICKETS: Ticket[] = [
-      {
-        id: "HYE-0052",
-        category: "Sadak (Potholes)",
-        location: "Canal Rd bend, Sec 3, Ward 12",
-        timeAgo: "12m ago",
-        status: "QUEUED",
-        hash: "SHA-256: 8F2A-91C8",
-        sizeKb: 48
-      },
-      {
-        id: "HYE-0051",
-        category: "Kachra (Garbage)",
-        location: "Near Sector 4 Enclosure, Ward 12",
-        timeAgo: "45m ago",
-        status: "QUEUED",
-        hash: "SHA-256: 4A7B-89E1",
-        sizeKb: 52
-      },
-      {
-        id: "HYE-0048",
-        category: "Paani (Water Leakage)",
-        location: "Main Chowk, Channi Himmat",
-        timeAgo: "2h ago",
-        status: "SYNCED",
-        hash: "SHA-256: 7A1C-99B2",
-        sizeKb: 44
-      },
-      {
-        id: "HYE-0042",
-        category: "Bijli (Streetlights)",
-        location: "Lane 4, Bakshi Nagar Enclave",
-        timeAgo: "4h ago",
-        status: "SYNCED",
-        hash: "SHA-256: 3D4E-7B21",
-        sizeKb: 39
-      }
-    ];
-
-    const CATEGORY_CHIPS = [
-      { id: "sadak", title: "Sadak (Potholes)", preset: "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=800&auto=format&fit=crop&q=80" },
-      { id: "kachra", title: "Kachra (Garbage)", preset: "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=800&auto=format&fit=crop&q=80" },
-      { id: "bijli", title: "Bijli (Streetlights)", preset: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=800&auto=format&fit=crop&q=80" }
-    ];
-
-    function MobileApp() {
-      // 3 Main Screens: 'signal' (Dashboard) | 'report' | 'vault'
-      const [currentTab, setCurrentTab] = useState<'signal' | 'report' | 'vault'>('signal');
+    function App() {
+      const [currentTab, setCurrentTab] = useState<'dashboard' | 'report' | 'vault'>('dashboard');
       const [isOnline, setIsOnline] = useState(true);
-      const [tickets, setTickets] = useState<Ticket[]>(INITIAL_TICKETS);
-
-      // Form state
-      const [selectedChip, setSelectedChip] = useState(CATEGORY_CHIPS[0]);
-      const [desc, setDesc] = useState("Severe asphalt crater with stagnant water pool near Canal Road bend.");
-      const [locationInput, setLocationInput] = useState("Canal Road, Sec 3, Trikuta Nagar (Ward 12)");
-
-      // Sync state
+      const [selectedChip, setSelectedChip] = useState("Sadak");
       const [isSyncing, setIsSyncing] = useState(false);
-      const [syncProgress, setSyncProgress] = useState(0);
-      const [toastMsg, setToastMsg] = useState<string | null>(null);
+      const [toastMsg, setToastMsg] = useState(null);
 
-      const showToast = (msg: string) => {
+      const showToast = (msg) => {
         setToastMsg(msg);
         setTimeout(() => setToastMsg(null), 3000);
       };
 
-      const handleSaveReport = () => {
-        const newTicket: Ticket = {
-          id: `HYE-00${tickets.length + 50}`,
-          category: selectedChip.title,
-          location: locationInput,
-          timeAgo: "Just now",
-          status: isOnline ? "SYNCED" : "QUEUED",
-          hash: `SHA-256: ${(Math.random() * 0xFFFFFF << 0).toString(16).toUpperCase()}`,
-          sizeKb: 48
-        };
-        setTickets([newTicket, ...tickets]);
-        showToast("✓ Encrypted & saved to ChaCha20 Offline Vault");
+      const handleSaveToVault = () => {
+        showToast("✓ Saved to Offline Vault (ChaCha20)");
         setCurrentTab('vault');
       };
 
       const handleSyncNow = () => {
-        if (!isOnline) {
-          showToast("⚠ No Signal. Switch toggle to ONLINE first!");
-          return;
-        }
         setIsSyncing(true);
-        setSyncProgress(25);
-        setTimeout(() => setSyncProgress(65), 500);
-        setTimeout(() => setSyncProgress(90), 1000);
         setTimeout(() => {
-          setSyncProgress(100);
           setIsSyncing(false);
-          setTickets(tickets.map(t => ({ ...t, status: 'SYNCED' })));
-          showToast("✓ All tickets uploaded to JMC Central Cloud!");
-        }, 1500);
+          showToast("✓ All uploads synced successfully!");
+        }, 1200);
       };
 
-      const queuedCount = tickets.filter(t => t.status === 'QUEUED').length;
-
       return (
-        <div className="w-full max-w-md h-[100dvh] bg-appBg shadow-2xl flex flex-col relative overflow-hidden text-slate-800 antialiased sm:rounded-[36px] sm:h-[844px] sm:border-[8px] sm:border-slate-800">
+        <div className="w-full max-w-md h-[100dvh] bg-[#FEF7FF] shadow-2xl flex flex-col relative overflow-hidden text-slate-800 sm:rounded-[32px] sm:h-[844px] sm:border-[8px] sm:border-slate-800">
           
-          {/* TOP APP BAR: 'HyperEdge | Jammu', 'ONLINE' badge, '2/8' badge, and subtext */}
-          <header className="bg-brandNavy text-white px-4 py-2.5 shadow-sm z-20 flex flex-col gap-1">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-white text-brandNavy flex items-center justify-center font-bold text-[9px]">
-                  JMC
-                </div>
-                <span className="text-base font-bold tracking-tight text-white">
-                  HyperEdge | Jammu
-                </span>
-              </div>
-
-              {/* Status & Sync Badges */}
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={() => setIsOnline(!isOnline)}
-                  className={`px-2 py-0.5 rounded-[4px] text-[10px] font-bold font-mono flex items-center gap-1 transition-all ${
-                    isOnline 
-                      ? 'bg-brandGreen text-white' 
-                      : 'bg-brandRed text-white'
-                  }`}
-                  title="Click to toggle network conditions"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
-                  <span>{isOnline ? "ONLINE" : "OFFLINE"}</span>
-                </button>
-
-                <div className="bg-brandOrange text-white text-[10px] font-bold font-mono px-2 py-0.5 rounded-[4px]">
-                  2/8
-                </div>
-              </div>
-            </div>
-
-            {/* Subtext Row */}
-            <div className="flex items-center justify-between text-[10px] font-mono text-slate-300">
-              <div className="flex items-center gap-1.5">
-                <span className="w-1 h-1 rounded-full bg-brandOrange"></span>
-                <span>SQLite Encrypted</span>
-                <span className="text-slate-400">·</span>
-                <span className="text-brandOrange font-bold">ChaCha20-Poly1305</span>
-              </div>
-              <span className="text-slate-400 text-[9px]">Ward 12 Trikuta</span>
-            </div>
-          </header>
-
           {/* Toast Notification */}
           {toastMsg && (
-            <div className="absolute top-20 left-4 right-4 z-50 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-2 text-xs font-medium border border-slate-700 animate-fade-in">
+            <div className="absolute top-16 left-4 right-4 z-50 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-2 text-xs font-medium border border-slate-700">
               <span>{toastMsg}</span>
             </div>
           )}
 
-          {/* SCROLLABLE BODY */}
-          <main className="flex-1 overflow-y-auto no-scrollbar p-4 space-y-4 pb-24">
-            
-            {/* SCREEN 1: DASHBOARD / SIGNAL INFO */}
-            {currentTab === 'signal' && (
-              <div className="space-y-4">
-                
-                {/* Title */}
-                <div>
-                  <h2 className="text-lg font-bold text-slate-900 tracking-tight">Jammu Terrain Connectivity</h2>
-                  <p className="text-xs text-slate-500">Field Corridor Audit & Network Dead-Zones</p>
+          {/* SCREEN 1: DASHBOARD */}
+          {currentTab === 'dashboard' && (
+            <div className="flex-1 flex flex-col relative">
+              {/* CenterAlignedTopAppBar */}
+              <header className="bg-[#FEF7FF] border-b border-slate-200/80 px-4 py-3 flex items-center justify-between z-10">
+                <div className="w-20"></div>
+                <h1 className="text-xl font-bold text-slate-900 text-center flex-1">HyperEdge</h1>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => setIsOnline(!isOnline)}
+                    className={`px-2.5 py-0.5 rounded-lg text-xs font-bold border ${
+                      isOnline ? 'bg-[#E8F5E9] text-[#1B5E20] border-[#81C784]' : 'bg-[#FFEBEE] text-[#B71C1C] border-[#E57373]'
+                    }`}
+                  >
+                    {isOnline ? "ONLINE" : "OFFLINE"}
+                  </button>
+                  <span className="bg-[#E65100] text-white text-xs font-bold px-2 py-0.5 rounded">
+                    2/8 Sync
+                  </span>
                 </div>
+              </header>
 
-                {/* 1. REGIONAL SIGNAL CONTOUR: JAMMU */}
-                <div className="space-y-1.5">
-                  <div className="text-[11px] font-bold font-mono text-slate-600">
-                    REGIONAL SIGNAL CONTOUR: JAMMU
-                  </div>
-
-                  <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200/80 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-900">Coverage Profile</span>
-                      <span className="bg-red-50 text-brandRed border border-red-200 text-[10px] font-bold font-mono px-2 py-0.5 rounded">
-                        CRITICAL DEAD-ZONE
-                      </span>
-                    </div>
-
-                    {/* Graphic Comparison */}
-                    <div className="bg-slate-50 rounded-lg p-3.5 border border-slate-200 flex items-center justify-between">
-                      {/* Left: City Centre */}
-                      <div className="flex-1 flex flex-col items-center text-center space-y-1.5">
-                        <div className="w-12 h-12 rounded-full border-2 border-brandGreen flex items-center justify-center p-1">
-                          <div className="w-7 h-7 rounded-full border border-brandGreen/40 flex items-center justify-center">
-                            <div className="w-3 h-3 rounded-full bg-brandGreen"></div>
-                          </div>
-                        </div>
-                        <span className="text-xs font-bold text-slate-900">City Centre</span>
-                        <span className="bg-green-100 text-green-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                          Strong 4G/5G
-                        </span>
-                      </div>
-
-                      {/* Dashed divider */}
-                      <div className="h-16 border-r-2 border-dashed border-slate-300 mx-2"></div>
-
-                      {/* Right: Hilly / Border */}
-                      <div className="flex-1 flex flex-col items-center text-center space-y-1.5">
-                        <div className="w-12 h-12 rounded-full bg-red-100 text-brandRed flex items-center justify-center">
-                          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                        <span className="text-xs font-bold text-slate-900">Hilly / Border</span>
-                        <span className="bg-red-100 text-brandRed text-[10px] font-bold px-2 py-0.5 rounded-full">
-                          DEAD ZONE
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 2. TRADITIONAL CLOUD-DEPENDENT FORM FAILURE */}
-                <div className="space-y-1.5">
-                  <div className="text-[11px] font-bold font-mono text-slate-600">
-                    TRADITIONAL CLOUD-DEPENDENT FORM FAILURE
-                  </div>
-
-                  <div className="bg-white rounded-xl p-3.5 shadow-sm border border-gray-200/80">
-                    <div className="flex items-center justify-between gap-1.5 text-center">
-                      <div className="flex-1 bg-slate-100 border border-slate-300 rounded-lg py-2.5 px-1 text-[11px] font-medium text-slate-700">
-                        Opens civic app
-                      </div>
-                      <span className="text-slate-400 font-bold">→</span>
-                      <div className="flex-1 bg-red-50 border border-red-300 rounded-lg py-2.5 px-1 text-[11px] font-bold text-brandRed">
-                        No internet
-                      </div>
-                      <span className="text-slate-400 font-bold">→</span>
-                      <div className="flex-1 bg-red-50 border border-red-300 rounded-lg py-2.5 px-1 text-[11px] font-bold text-brandRed">
-                        Form fails
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 3. 4 CLEAN INFO CARDS IN A GRID */}
-                <div className="space-y-1.5">
-                  <div className="text-[11px] font-bold font-mono text-slate-600">
-                    FIELD FAILURE MODES IN JAMMU
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2.5">
-                    {/* Card 1 */}
-                    <div className="bg-white rounded-xl p-3.5 shadow-sm border border-gray-200/80 space-y-1.5 flex flex-col justify-between">
-                      <div>
-                        <span className="bg-slate-100 text-slate-700 text-[10px] font-semibold px-2 py-0.5 rounded">
-                          Geography
-                        </span>
-                        <h4 className="text-xs font-bold text-slate-900 mt-1">Two Jammus</h4>
-                        <p className="text-[11px] text-slate-500 leading-snug mt-0.5">
-                          Smart City core enjoys fiber & 5G while peri-urban wards face frequent drops.
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Card 2 */}
-                    <div className="bg-white rounded-xl p-3.5 shadow-sm border border-gray-200/80 space-y-1.5 flex flex-col justify-between">
-                      <div>
-                        <span className="bg-slate-100 text-slate-700 text-[10px] font-semibold px-2 py-0.5 rounded">
-                          Hazard
-                        </span>
-                        <h4 className="text-xs font-bold text-slate-900 mt-1">Dead-zone trap</h4>
-                        <p className="text-[11px] text-slate-500 leading-snug mt-0.5">
-                          Citizens spot broken mains exactly where terrain blocks mobile data packets.
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Card 3 */}
-                    <div className="bg-white rounded-xl p-3.5 shadow-sm border border-gray-200/80 space-y-1.5 flex flex-col justify-between">
-                      <div>
-                        <span className="bg-slate-100 text-slate-700 text-[10px] font-semibold px-2 py-0.5 rounded">
-                          HTTP Loss
-                        </span>
-                        <h4 className="text-xs font-bold text-slate-900 mt-1">Silent failure</h4>
-                        <p className="text-[11px] text-slate-500 leading-snug mt-0.5">
-                          Browser portals discard citizen inputs silently upon timeout with zero recovery.
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Card 4 */}
-                    <div className="bg-white rounded-xl p-3.5 shadow-sm border border-gray-200/80 space-y-1.5 flex flex-col justify-between">
-                      <div>
-                        <span className="bg-slate-100 text-slate-700 text-[10px] font-semibold px-2 py-0.5 rounded">
-                          Surge
-                        </span>
-                        <h4 className="text-xs font-bold text-slate-900 mt-1">Server overload</h4>
-                        <p className="text-[11px] text-slate-500 leading-snug mt-0.5">
-                          Monsoon storms trigger concurrent requests that choke municipal web servers.
-                        </p>
-                      </div>
-                    </div>
+              {/* Main Content: 70% height grey Box with Icons.Default.Place */}
+              <div className="flex-1 flex flex-col justify-start">
+                <div className="w-full h-[70%] bg-[#E0E0E0] flex items-center justify-center relative">
+                  <svg className="w-14 h-14 text-slate-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z"/>
+                  </svg>
+                  <div className="absolute bottom-4 bg-white/80 backdrop-blur-sm px-3 py-1 rounded text-xs font-medium text-slate-600">
+                    Map Placeholder (70% viewport)
                   </div>
                 </div>
               </div>
-            )}
 
-            {/* SCREEN 2: REPORT ISSUE (EDGE AI) */}
-            {currentTab === 'report' && (
-              <div className="space-y-4">
-                <div>
-                  <h2 className="text-lg font-bold text-slate-900 tracking-tight">Report Civic Issue</h2>
-                  <p className="text-xs text-slate-500">Edge AI verifies photo on-device and signs ticket offline</p>
-                </div>
-
-                {/* Category Chips: Sadak, Kachra, Bijli */}
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider font-mono">
-                    Category Chips
-                  </label>
-                  <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
-                    {CATEGORY_CHIPS.map(chip => {
-                      const isSel = selectedChip.id === chip.id;
-                      return (
-                        <button
-                          key={chip.id}
-                          onClick={() => setSelectedChip(chip)}
-                          className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors border ${
-                            isSel 
-                              ? 'bg-brandOrange text-white border-brandOrange' 
-                              : 'bg-white text-slate-700 border-slate-200'
-                          }`}
-                        >
-                          {chip.title}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Simulated Camera Viewfinder Box (Edge AI Validation) */}
-                <div className="space-y-1.5">
-                  <div className="flex justify-between items-center text-xs font-bold text-slate-700 font-mono">
-                    <span>EDGE AI VALIDATION</span>
-                    <span className="text-green-700 bg-green-100 px-2 py-0.5 rounded-full text-[10px]">TFLite Active</span>
-                  </div>
-
-                  <div className="relative rounded-2xl overflow-hidden bg-black aspect-[4/3] border border-slate-300 shadow-sm flex flex-col justify-between p-3">
-                    <img 
-                      src={selectedChip.preset} 
-                      alt="Camera preview"
-                      className="absolute inset-0 w-full h-full object-cover opacity-85"
-                    />
-
-                    {/* Top GPS Overlay */}
-                    <div className="relative z-10 flex justify-between items-center text-white text-[10px] font-mono">
-                      <span className="bg-black/60 px-2 py-0.5 rounded backdrop-blur-sm">
-                        GPS: 32.7058°N, 74.8732°E · Ward 12
-                      </span>
-                      <span className="bg-brandOrange px-1.5 py-0.5 rounded text-[9px] font-bold">NPU Active</span>
-                    </div>
-
-                    {/* Center Bounding Box: Pothole Detected - 94% */}
-                    <div className="relative z-10 self-center border-2 border-brandOrange rounded-lg p-2 bg-brandOrange/10 shadow-[0_0_12px_rgba(232,118,12,0.5)]">
-                      <span className="bg-brandOrange text-white text-[10px] font-bold px-2 py-0.5 rounded shadow block">
-                        Pothole Detected - 94%
-                      </span>
-                    </div>
-
-                    {/* Bottom Telemetry Readout */}
-                    <div className="relative z-10 bg-black/75 backdrop-blur-sm p-2 rounded-xl text-white text-[10px] font-mono flex justify-between items-center">
-                      <span className="text-brandGreen font-bold">✓ Clarity: 93.8% PASS</span>
-                      <span className="text-slate-300">SHA-256: 8F2A-91C8</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Input Fields */}
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-xs font-bold text-slate-700 block mb-1">Location & Landmark</label>
-                    <input 
-                      type="text"
-                      value={locationInput}
-                      onChange={(e) => setLocationInput(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-brandOrange"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-bold text-slate-700 block mb-1">Issue Description</label>
-                    <textarea 
-                      rows={2}
-                      value={desc}
-                      onChange={(e) => setDesc(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-brandOrange"
-                    />
-                  </div>
-                </div>
-
-                {/* Prominent Orange Button at Bottom: "Save to Offline Vault" */}
+              {/* ExtendedFloatingActionButton at bottom */}
+              <div className="absolute bottom-20 left-4 right-4 z-20">
                 <button
-                  onClick={handleSaveReport}
-                  className="w-full py-3.5 bg-brandOrange hover:bg-orange-600 active:scale-[0.98] text-white font-bold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
+                  onClick={() => setCurrentTab('report')}
+                  className="w-full py-4 bg-[#E65100] hover:bg-orange-700 text-white font-bold rounded-2xl shadow-lg flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
                 >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
                   </svg>
-                  <span>Save to Offline Vault</span>
+                  <span>Report Issue</span>
                 </button>
               </div>
-            )}
+            </div>
+          )}
 
-            {/* SCREEN 3: OFFLINE VAULT */}
-            {currentTab === 'vault' && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between pb-1">
-                  <div>
-                    <h2 className="text-lg font-bold text-slate-900 tracking-tight">Offline Vault</h2>
-                    <p className="text-xs text-slate-500">ChaCha20-Poly1305 Encrypted Local Buffer</p>
-                  </div>
-                  <span className="bg-orange-100 text-orange-800 font-bold text-xs px-2.5 py-1 rounded-full">
-                    {queuedCount} Pending Sync
-                  </span>
+          {/* SCREEN 2: REPORT ISSUE */}
+          {currentTab === 'report' && (
+            <div className="flex-1 flex flex-col p-4">
+              {/* TopAppBar with Back */}
+              <div className="flex items-center gap-3 pb-3 border-b border-slate-200">
+                <button 
+                  onClick={() => setCurrentTab('dashboard')} 
+                  className="p-1 rounded-full hover:bg-slate-100"
+                >
+                  <svg className="w-6 h-6 text-slate-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+                </button>
+                <h2 className="text-lg font-bold text-slate-900">Report Issue</h2>
+              </div>
+
+              {/* 1. Large Box (height 300px, black bg) camera preview */}
+              <div className="w-full h-[300px] bg-black rounded-lg mt-4 relative overflow-hidden flex flex-col justify-end">
+                <img 
+                  src="https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=800&auto=format&fit=crop&q=80" 
+                  alt="Road" 
+                  className="absolute inset-0 w-full h-full object-cover opacity-70"
+                />
+                <div className="relative z-10 bg-black/65 px-3 py-2.5 flex items-center">
+                  <span className="text-white text-xs font-medium">Edge AI Active: Pothole Detected (94%)</span>
                 </div>
+              </div>
 
-                {/* Sync Controller Card */}
-                <div className="bg-white rounded-xl border border-gray-200/80 p-4 shadow-sm space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-bold text-slate-900">
-                        {isOnline ? "4G JMC Link Available" : "Dead-Zone Mode Active"}
-                      </h3>
-                      <p className="text-[11px] text-slate-500">
-                        {isOnline ? "Ready to push delta packets to central command" : "Buffered securely in on-device SQLite ledger"}
-                      </p>
-                    </div>
-                    <span className={`w-2.5 h-2.5 rounded-full ${isOnline ? 'bg-brandGreen animate-pulse' : 'bg-brandRed'}`}></span>
-                  </div>
-
-                  {/* Progress bar when syncing */}
-                  {isSyncing && (
-                    <div className="space-y-1 pt-1">
-                      <div className="flex justify-between text-[10px] font-mono text-slate-500">
-                        <span>Uploading delta batch...</span>
-                        <span>{syncProgress}%</span>
-                      </div>
-                      <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                        <div className="bg-brandGreen h-full transition-all duration-300 rounded-full" style={{ width: `${syncProgress}%` }}></div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Clean Sync Now Button when Online */}
-                  {isOnline ? (
+              {/* 2. Scrollable Row with 3 FilterChips */}
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar mt-4 py-1">
+                {["Sadak", "Kachra", "Bijli"].map((chip) => {
+                  const isSel = selectedChip === chip;
+                  return (
                     <button
-                      onClick={handleSyncNow}
-                      disabled={isSyncing || queuedCount === 0}
-                      className={`w-full py-2.5 px-4 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 ${
-                        queuedCount === 0 
-                          ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
-                          : 'bg-brandGreen hover:bg-emerald-700 text-white shadow-sm'
+                      key={chip}
+                      onClick={() => setSelectedChip(chip)}
+                      className={`px-4 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+                        isSel 
+                          ? 'bg-[#E8DEF8] text-[#1D192B] border-[#79747E]' 
+                          : 'bg-white text-slate-700 border-slate-300'
                       }`}
                     >
-                      {isSyncing ? "Syncing..." : queuedCount === 0 ? "✓ All Records Synced" : `Sync Now (${queuedCount} Tickets)`}
+                      {chip}
                     </button>
-                  ) : (
-                    <div className="bg-red-50 text-red-800 text-xs px-3 py-2 rounded-lg flex items-center gap-2 font-medium">
-                      <span>Toggle header to 'ONLINE' to trigger central delta-sync.</span>
-                    </div>
-                  )}
+                  );
+                })}
+              </div>
+
+              {/* 3. Spacer */}
+              <div className="flex-1"></div>
+
+              {/* 4. Large Button at bottom (fillMaxWidth) */}
+              <div className="mb-20">
+                <button
+                  onClick={handleSaveToVault}
+                  className="w-full py-3.5 bg-[#E65100] hover:bg-orange-700 text-white font-bold rounded-lg shadow active:scale-[0.98] transition-all text-sm"
+                >
+                  Save to Offline Vault (ChaCha20)
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* SCREEN 3: OFFLINE VAULT */}
+          {currentTab === 'vault' && (
+            <div className="flex-1 flex flex-col p-4">
+              <div className="pb-3 border-b border-slate-200">
+                <h2 className="text-xl font-bold text-slate-900">Sync Vault</h2>
+              </div>
+
+              {/* Row with "2 Pending Uploads" and "Sync Now" button */}
+              <div className="flex items-center justify-between mt-4">
+                <span className="text-base font-semibold text-slate-900">2 Pending Uploads</span>
+                <button
+                  onClick={handleSyncNow}
+                  className="px-4 py-2 bg-[#6750A4] text-white font-semibold rounded-lg text-xs hover:bg-[#583f94] transition-all"
+                >
+                  {isSyncing ? "Syncing..." : "Sync Now"}
+                </button>
+              </div>
+
+              {/* LinearProgressIndicator at 0.5f progress */}
+              <div className="w-full bg-slate-200 h-1.5 rounded-full mt-3 overflow-hidden">
+                <div className="bg-[#6750A4] h-full transition-all duration-300 rounded-full" style={{ width: '50%' }}></div>
+              </div>
+
+              {/* LazyColumn of mock cards */}
+              <div className="space-y-3 mt-4 overflow-y-auto no-scrollbar pb-24">
+                {/* Card 1 */}
+                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200/80 space-y-2">
+                  <h3 className="text-base font-bold text-slate-900">Ticket #HYE-0042</h3>
+                  <p className="text-xs text-slate-600">Category: Sadak | Size: 2.4MB</p>
+                  <div className="flex items-center gap-1.5 text-slate-500 text-xs pt-1">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                    </svg>
+                    <span>Encrypted locally</span>
+                  </div>
                 </div>
 
-                {/* List of Tickets: Explicitly showing (ChaCha20 Encrypted) */}
-                <div className="space-y-2.5">
-                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider font-mono">
-                    Queued Tickets (ChaCha20 Encrypted)
-                  </h3>
-
-                  {tickets.map(ticket => {
-                    const isQueued = ticket.status === 'QUEUED';
-                    return (
-                      <div 
-                        key={ticket.id} 
-                        className="bg-white rounded-xl p-3.5 shadow-sm border border-gray-200/80 flex items-center justify-between gap-3"
-                      >
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono text-xs font-bold text-slate-900">{ticket.id}</span>
-                            <span className="text-[10px] font-bold font-mono text-brandOrange bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded">
-                              (ChaCha20 Encrypted)
-                            </span>
-                          </div>
-                          <p className="text-xs text-slate-700 font-medium mt-1 truncate">
-                            {ticket.category} · {ticket.location}
-                          </p>
-                          <span className="text-[10px] font-mono text-slate-400 mt-0.5 block">
-                            {ticket.hash} · {ticket.sizeKb} KB
-                          </span>
-                        </div>
-
-                        <div className="shrink-0 text-right">
-                          {isQueued ? (
-                            <span className="bg-orange-100 text-orange-800 rounded-full px-2.5 py-0.5 text-[10px] font-bold">
-                              Waiting Sync
-                            </span>
-                          ) : (
-                            <span className="bg-green-100 text-green-800 rounded-full px-2.5 py-0.5 text-[10px] font-bold">
-                              ✓ Synced
-                            </span>
-                          )}
-                          <span className="text-[10px] font-mono text-slate-400 block mt-1">{ticket.timeAgo}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
+                {/* Card 2 */}
+                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200/80 space-y-2">
+                  <h3 className="text-base font-bold text-slate-900">Ticket #HYE-0043</h3>
+                  <p className="text-xs text-slate-600">Category: Kachra | Size: 1.8MB</p>
+                  <div className="flex items-center gap-1.5 text-slate-500 text-xs pt-1">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                    </svg>
+                    <span>Encrypted locally</span>
+                  </div>
                 </div>
               </div>
-            )}
-          </main>
+            </div>
+          )}
 
-          {/* FIXED BOTTOM NAVIGATION BAR */}
-          <nav className="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-200/80 px-6 py-2 flex items-center justify-between z-30 shadow-lg">
-            
-            {/* Tab 1: Signal Info */}
-            <button
-              onClick={() => setCurrentTab('signal')}
-              className={`flex flex-col items-center gap-1 transition-colors ${
-                currentTab === 'signal' ? 'text-brandOrange' : 'text-slate-400 hover:text-slate-600'
-              }`}
+          {/* Bottom Navigation */}
+          <nav className="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-6 py-2 flex items-center justify-around z-30 shadow-md">
+            <button 
+              onClick={() => setCurrentTab('dashboard')} 
+              className={`flex flex-col items-center gap-1 ${currentTab === 'dashboard' ? 'text-[#E65100]' : 'text-slate-400'}`}
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z"/>
+              </svg>
+              <span className="text-[10px] font-semibold">Dashboard</span>
+            </button>
+
+            <button 
+              onClick={() => setCurrentTab('report')} 
+              className={`flex flex-col items-center gap-1 ${currentTab === 'report' ? 'text-[#E65100]' : 'text-slate-400'}`}
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={currentTab === 'signal' ? "2.5" : "2"} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
               </svg>
-              <span className="text-[10px] font-semibold">Signal Info</span>
+              <span className="text-[10px] font-semibold">Report</span>
             </button>
 
-            {/* Tab 2: Report Issue (FAB in center) */}
-            <button
-              onClick={() => setCurrentTab('report')}
-              className="flex flex-col items-center -mt-5 group"
+            <button 
+              onClick={() => setCurrentTab('vault')} 
+              className={`flex flex-col items-center gap-1 ${currentTab === 'vault' ? 'text-[#E65100]' : 'text-slate-400'}`}
             >
-              <div className={`w-13 h-13 p-3 rounded-full bg-brandOrange text-white shadow-lg transition-transform active:scale-95 group-hover:bg-orange-600 border-4 border-appBg flex items-center justify-center ${
-                currentTab === 'report' ? 'ring-2 ring-brandOrange/50' : ''
-              }`}>
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M12 4v16m8-8H4" />
-                </svg>
-              </div>
-              <span className="text-[10px] font-bold text-slate-700 mt-1">Report</span>
-            </button>
-
-            {/* Tab 3: My Vault */}
-            <button
-              onClick={() => setCurrentTab('vault')}
-              className={`flex flex-col items-center gap-1 relative transition-colors ${
-                currentTab === 'vault' ? 'text-brandOrange' : 'text-slate-400 hover:text-slate-600'
-              }`}
-            >
-              <div className="relative">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={currentTab === 'vault' ? "2.5" : "2"} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                </svg>
-                {queuedCount > 0 && (
-                  <span className="absolute -top-1.5 -right-2 bg-brandOrange text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
-                    {queuedCount}
-                  </span>
-                )}
-              </div>
-              <span className="text-[10px] font-semibold">Offline Vault</span>
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+              </svg>
+              <span className="text-[10px] font-semibold">Sync Vault</span>
             </button>
           </nav>
 
@@ -647,7 +261,7 @@
       );
     }
 
-    ReactDOM.render(<MobileApp />, document.getElementById('root'));
+    ReactDOM.render(<App />, document.getElementById('root'));
   </script>
 </body>
 </html>

@@ -38,15 +38,12 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ui.components.HyperEdgeBottomNav
-import com.example.ui.components.HyperEdgeHeader
 import com.example.ui.components.MobileTab
+import com.example.ui.screens.DashboardScreen
 import com.example.ui.screens.OfflineVaultScreen
 import com.example.ui.screens.ReportIssueScreen
-import com.example.ui.screens.SignalDashboardScreen
 import com.example.ui.theme.GreenSuccess
 import com.example.ui.theme.OrangeAccent
-
-val MobileAppBg = Color(0xFFF9FAFB)
 
 @Composable
 fun HyperEdgeApp(
@@ -57,21 +54,11 @@ fun HyperEdgeApp(
     val isSyncing by viewModel.isSyncing.collectAsStateWithLifecycle()
     val currentToast by viewModel.currentToast.collectAsStateWithLifecycle()
 
-    var activeTab by remember { mutableStateOf(MobileTab.SIGNAL_INFO) }
+    var activeTab by remember { mutableStateOf(MobileTab.DASHBOARD) }
     val queuedCount = reports.count { it.status in listOf("PENDING", "SEALED", "SYNCING") }
 
     Scaffold(
-        topBar = {
-            // SCREEN 1 Top App Bar: 'HyperEdge | Jammu', 'ONLINE' status green badge, sync counter '2/8' orange badge.
-            // Subtext: 'SQLite Encrypted' and 'ChaCha20-Poly1305'
-            HyperEdgeHeader(
-                isOnline = isOnline,
-                onToggleOnline = { viewModel.toggleOnline() },
-                syncCountText = "2/8"
-            )
-        },
         bottomBar = {
-            // Bottom Nav: 3 standard mobile icons -> [Signal Info] | [Report Issue (FAB)] | [Offline Vault]
             HyperEdgeBottomNav(
                 currentTab = activeTab,
                 queuedCount = queuedCount,
@@ -79,24 +66,24 @@ fun HyperEdgeApp(
                     activeTab = selectedTab
                 }
             )
-        },
-        containerColor = MobileAppBg
+        }
     ) { innerPadding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(MobileAppBg)
         ) {
-            // Clean 3-Screen Native Architecture
             when (activeTab) {
-                MobileTab.SIGNAL_INFO -> {
-                    // SCREEN 1: Dashboard / Signal Info
-                    SignalDashboardScreen()
+                MobileTab.DASHBOARD -> {
+                    DashboardScreen(
+                        isOnline = isOnline,
+                        onToggleOnline = { viewModel.toggleOnline() },
+                        onReportIssueClick = { activeTab = MobileTab.REPORT }
+                    )
                 }
                 MobileTab.REPORT -> {
-                    // SCREEN 2: Report Issue - Edge AI
                     ReportIssueScreen(
+                        onBackClick = { activeTab = MobileTab.DASHBOARD },
                         onSaveToVault = { newReport ->
                             viewModel.saveAndEncryptReport(newReport)
                             activeTab = MobileTab.VAULT
@@ -104,7 +91,6 @@ fun HyperEdgeApp(
                     )
                 }
                 MobileTab.VAULT -> {
-                    // SCREEN 3: Offline Vault
                     OfflineVaultScreen(
                         reports = reports,
                         isOnline = isOnline,
@@ -114,7 +100,7 @@ fun HyperEdgeApp(
                 }
             }
 
-            // Elegant Floating Toast
+            // Floating Toast
             AnimatedVisibility(
                 visible = currentToast != null,
                 enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
