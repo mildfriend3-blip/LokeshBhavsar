@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>HyperEdge | Jammu Smart City</title>
+  <title>HyperEdge | Ward 12</title>
   
-  <!-- Inter & JetBrains Mono Fonts -->
+  <!-- Inter Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -26,12 +26,10 @@
         extend: {
           colors: {
             brandNavy: '#0F2B46',
-            brandNavyDark: '#081A2C',
             brandOrange: '#E8760C',
             brandGreen: '#1F9D55',
             brandRed: '#BE3A2B',
-            appBg: '#F9FAFB',
-            surface: '#FFFFFF'
+            appBg: '#F9FAFB'
           },
           fontFamily: {
             sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
@@ -47,12 +45,11 @@
       user-select: none;
     }
     body {
-      background-color: #0b1723;
+      background-color: #F3F4F6;
       margin: 0;
       padding: 0;
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
-    /* Hide scrollbar for clean mobile feel */
     .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
@@ -84,8 +81,8 @@
     const INITIAL_REPORTS: ReportItem[] = [
       {
         id: "HYE-204",
-        title: "Deep Pothole with Rainwater Pool",
-        category: "Road & Pothole",
+        title: "Deep Pothole with Stagnant Water",
+        category: "Sadak (Pothole)",
         location: "Canal Rd, Sec 3, Trikuta Nagar",
         timeAgo: "12m ago",
         status: "QUEUED",
@@ -96,8 +93,8 @@
       },
       {
         id: "HYE-203",
-        title: "Overflowing Municipal Dumpster",
-        category: "Sanitation",
+        title: "Overflowing Municipal Enclosure",
+        category: "Kachra (Garbage)",
         location: "Near Sector 4 Market, Trikuta Nagar",
         timeAgo: "45m ago",
         status: "IN_PROGRESS",
@@ -108,8 +105,8 @@
       },
       {
         id: "HYE-198",
-        title: "Underground Water Main Leak",
-        category: "Water Supply",
+        title: "Underground Potable Water Main Burst",
+        category: "Paani (Water)",
         location: "Main Chowk, Channi Himmat",
         timeAgo: "2h ago",
         status: "RESOLVED",
@@ -120,9 +117,9 @@
       },
       {
         id: "HYE-195",
-        title: "Unlit Streetlight Fixtures (x3)",
-        category: "Streetlight",
-        location: "Lane 4, Bakshi Nagar",
+        title: "Sodium Vapor Fixtures Out (x3)",
+        category: "Bijli (Streetlight)",
+        location: "Lane 4, Bakshi Nagar Enclave",
         timeAgo: "4h ago",
         status: "RESOLVED",
         imageUrl: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=600&auto=format&fit=crop&q=80",
@@ -132,75 +129,68 @@
       }
     ];
 
+    const CATEGORY_CHIPS = [
+      { id: "sadak", title: "Sadak (Potholes)", preset: "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=800&auto=format&fit=crop&q=80" },
+      { id: "kachra", title: "Kachra (Garbage)", preset: "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=800&auto=format&fit=crop&q=80" },
+      { id: "bijli", title: "Bijli (Streetlights)", preset: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=800&auto=format&fit=crop&q=80" },
+      { id: "paani", title: "Paani (Water)", preset: "https://images.unsplash.com/photo-1584467735815-f778f274e296?w=800&auto=format&fit=crop&q=80" },
+      { id: "nala", title: "Nala (Drainage)", preset: "https://images.unsplash.com/photo-1584467735815-f778f274e296?w=800&auto=format&fit=crop&q=80" }
+    ];
+
     function MobileApp() {
-      // 3 Main Mobile Screens: 'home' | 'camera' | 'vault'
-      const [currentTab, setCurrentTab] = useState<'home' | 'camera' | 'vault'>('home');
-      const [isOnline, setIsOnline] = useState(false); // Default offline for demonstration
+      // 3 Main Mobile Screens: 'home' | 'report' | 'vault'
+      const [currentTab, setCurrentTab] = useState<'home' | 'report' | 'vault'>('home');
+      const [isOnline, setIsOnline] = useState(false);
       const [reports, setReports] = useState<ReportItem[]>(INITIAL_REPORTS);
       
-      // Camera states
-      const [cameraDetected, setCameraDetected] = useState(false);
-      const [cameraScanning, setCameraScanning] = useState(true);
-      const [capturedPhoto, setCapturedPhoto] = useState(false);
+      // Form state
+      const [selectedChip, setSelectedChip] = useState(CATEGORY_CHIPS[0]);
+      const [desc, setDesc] = useState("Deep road cavity causing severe two-wheeler hazard.");
+      const [locationInput, setLocationInput] = useState("Canal Road, Sec 3, Trikuta Nagar");
       
-      // Vault sync states
+      // Sync state
       const [isSyncing, setIsSyncing] = useState(false);
       const [syncProgress, setSyncProgress] = useState(0);
       const [toastMsg, setToastMsg] = useState<string | null>(null);
 
       const showToast = (msg: string) => {
         setToastMsg(msg);
-        setTimeout(() => setToastMsg(null), 3200);
+        setTimeout(() => setToastMsg(null), 3000);
       };
 
-      // Camera scanner simulation
-      useEffect(() => {
-        if (currentTab === 'camera') {
-          setCameraScanning(true);
-          setCameraDetected(false);
-          setCapturedPhoto(false);
-          const t = setTimeout(() => {
-            setCameraScanning(false);
-            setCameraDetected(true);
-          }, 900);
-          return () => clearTimeout(t);
-        }
-      }, [currentTab]);
-
-      const handleSaveReportFromCamera = () => {
+      const handleSaveReport = () => {
         const newReport: ReportItem = {
           id: `HYE-${Math.floor(205 + Math.random() * 50)}`,
-          title: "Asphalt Fissure & Road Rut",
-          category: "Road & Pothole",
-          location: "Sector 4, Trikuta Nagar (Ward 12)",
+          title: selectedChip.title,
+          category: selectedChip.title,
+          location: locationInput,
           timeAgo: "Just now",
           status: isOnline ? "SYNCED" : "QUEUED",
-          imageUrl: "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=600&auto=format&fit=crop&q=80",
+          imageUrl: selectedChip.preset,
           votes: 1,
           aiConfidence: 94,
           hash: "9C4D-22E5"
         };
         setReports([newReport, ...reports]);
-        showToast("✓ Encrypted & stored in ChaCha20 Offline Vault");
+        showToast("✓ Encrypted & saved to ChaCha20 Offline Vault");
         setCurrentTab('vault');
       };
 
-      const handleSyncVault = () => {
+      const handleSyncNow = () => {
         if (!isOnline) {
-          showToast("⚠ No Signal. Switch toggle to 4G Online first!");
+          showToast("⚠ No Signal. Switch toggle to Online first!");
           return;
         }
         setIsSyncing(true);
         setSyncProgress(25);
-
-        setTimeout(() => setSyncProgress(60), 600);
-        setTimeout(() => setSyncProgress(90), 1200);
+        setTimeout(() => setSyncProgress(65), 500);
+        setTimeout(() => setSyncProgress(90), 1000);
         setTimeout(() => {
           setSyncProgress(100);
           setIsSyncing(false);
           setReports(reports.map(r => ({ ...r, status: r.status === 'QUEUED' ? 'SYNCED' : r.status })));
-          showToast("✓ All queued reports uploaded to JMC Cloud!");
-        }, 1800);
+          showToast("✓ All tickets successfully uploaded to JMC Cloud!");
+        }, 1500);
       };
 
       const queuedCount = reports.filter(r => r.status === 'QUEUED').length;
@@ -208,109 +198,51 @@
       return (
         <div className="w-full max-w-md h-[100dvh] bg-appBg shadow-2xl flex flex-col relative overflow-hidden text-slate-800 antialiased sm:rounded-[36px] sm:h-[844px] sm:border-[8px] sm:border-slate-800">
           
-          {/* Top Status Bar Simulator (Clock / Battery) */}
-          <div className="bg-brandNavy text-white/80 px-6 pt-3 pb-1 flex justify-between items-center text-[11px] font-semibold tracking-tight select-none">
-            <span>9:41</span>
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-mono">{isOnline ? "4G" : "DEAD-ZONE"}</span>
-              <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                <path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 18.25A9.96 9.96 0 012 12C2 6.48 6.48 2 12 2s10 4.48 10 10c0 2.32-.8 4.45-2.14 6.15l-.62-.62A8.96 8.96 0 0021 12c0-4.97-4.03-9-9-9z"/>
-              </svg>
-              <div className="w-5 h-2.5 border border-white/60 rounded-sm p-0.5 flex items-center">
-                <div className="h-full w-3.5 bg-white rounded-2xs"></div>
-              </div>
-            </div>
-          </div>
+          {/* APP HEADER: Just the text "HyperEdge | Ward 12" and a clean, elegant [Online/Offline] toggle button. NO OTHER TEXT. */}
+          <header className="bg-brandNavy text-white px-5 py-3.5 flex items-center justify-between shadow-sm z-20">
+            <span className="text-base font-bold tracking-tight text-white">
+              HyperEdge | Ward 12
+            </span>
 
-          {/* 1. TOP NATIVE APP BAR */}
-          <header className="bg-brandNavy text-white px-4 py-3 flex items-center justify-between shadow-md z-20">
-            <div className="flex items-center gap-2.5">
-              {/* Circular JMC Crest Badge */}
-              <div className="w-9 h-9 rounded-full bg-white flex flex-col items-center justify-center border-2 border-brandOrange text-brandNavy font-bold leading-none shadow-sm">
-                <span className="text-[10px] tracking-tighter font-extrabold">JMC</span>
-                <span className="text-[6px] text-brandOrange -mt-0.5">जम्मू</span>
-              </div>
-              <div>
-                <h1 className="text-base font-bold tracking-tight text-white leading-tight">HyperEdge</h1>
-                <p className="text-[10px] text-slate-300 font-medium leading-none">Jammu Smart City · Ward 12</p>
-              </div>
-            </div>
-
-            {/* Network Toggle Switch Pill */}
             <button
               onClick={() => setIsOnline(!isOnline)}
-              className={`px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all duration-300 shadow-sm border ${
+              className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm ${
                 isOnline 
-                  ? 'bg-brandGreen/20 text-green-300 border-brandGreen/40' 
-                  : 'bg-brandRed/25 text-red-300 border-brandRed/50'
+                  ? 'bg-brandGreen/25 text-green-300 border border-brandGreen/40' 
+                  : 'bg-brandRed/25 text-red-300 border border-brandRed/50'
               }`}
             >
               <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-brandGreen animate-pulse' : 'bg-brandRed'}`}></span>
-              <span className="text-[11px]">{isOnline ? "Online 4G" : "Offline"}</span>
+              <span>{isOnline ? "Online" : "Offline"}</span>
             </button>
           </header>
 
-          {/* Sub-header Connectivity Notice (Only in Dead-Zone) */}
-          {!isOnline && (
-            <div className="bg-brandRed text-white px-4 py-1.5 text-xs font-medium flex items-center justify-between shadow-inner">
-              <span className="flex items-center gap-1.5">
-                <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                </svg>
-                <span>Dead-Zone mode: On-device SQLite Active</span>
-              </span>
-              <span className="text-[10px] opacity-85 underline cursor-pointer" onClick={() => setIsOnline(true)}>Connect</span>
-            </div>
-          )}
-
           {/* Toast Notification */}
           {toastMsg && (
-            <div className="absolute top-16 left-4 right-4 z-50 bg-slate-900/95 text-white px-4 py-3 rounded-xl shadow-xl flex items-center justify-between text-xs font-medium border border-slate-700 animate-fade-in">
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-brandGreen" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span>{toastMsg}</span>
-              </div>
+            <div className="absolute top-16 left-4 right-4 z-50 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-2 text-xs font-medium border border-slate-700 animate-fade-in">
+              <svg className="w-4 h-4 text-brandGreen" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <span>{toastMsg}</span>
             </div>
           )}
 
-          {/* 2. SCROLLABLE BODY */}
+          {/* SCROLLABLE BODY */}
           <main className="flex-1 overflow-y-auto no-scrollbar p-4 space-y-4 pb-24">
             
             {/* SCREEN 1: HOME (CITIZEN FEED) */}
             {currentTab === 'home' && (
-              <div className="space-y-4">
-                
-                {/* Greeting & Filter Chips */}
-                <div className="flex items-center justify-between">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between pb-1">
                   <div>
-                    <h2 className="text-lg font-bold text-slate-900 tracking-tight">Ward 12 Feed</h2>
-                    <p className="text-xs text-slate-500">Trikuta Nagar & Canal Road</p>
+                    <h2 className="text-lg font-bold text-slate-900 tracking-tight">Recent Reports near you</h2>
+                    <p className="text-xs text-slate-500">Ward 12 · Trikuta Nagar & Canal Road</p>
                   </div>
                   <span className="bg-slate-200/80 text-slate-700 text-xs px-2.5 py-1 rounded-full font-semibold">
                     {reports.length} Reports
                   </span>
                 </div>
 
-                {/* Quick Offline Alert Card */}
-                {!isOnline && (
-                  <div className="bg-white rounded-xl p-3.5 border border-slate-200 shadow-sm flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-orange-100 text-brandOrange flex items-center justify-center shrink-0">
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-xs font-bold text-slate-900">Zero Internet Required</h3>
-                      <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
-                        Reports are signed on-device with ChaCha20 encryption. They upload automatically when you enter coverage.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Report Feed Cards */}
                 <div className="space-y-3">
                   {reports.map(item => {
                     const isQueued = item.status === 'QUEUED';
@@ -318,81 +250,54 @@
                     return (
                       <div 
                         key={item.id} 
-                        className="bg-surface rounded-xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col transition active:scale-[0.99]"
+                        className="bg-white rounded-xl p-4 mb-3 shadow-sm border border-gray-100 flex flex-col space-y-2.5 transition active:scale-[0.99]"
                       >
-                        {/* Card Image Banner */}
-                        <div className="h-36 w-full relative bg-slate-100 overflow-hidden">
+                        {/* Header: Category & Small Elegant Status Pill (Does NOT color entire card) */}
+                        <div className="flex items-center justify-between">
+                          <span className="bg-slate-100 text-slate-700 text-[11px] font-semibold px-2.5 py-0.5 rounded-md">
+                            {item.category}
+                          </span>
+
+                          {isResolved && (
+                            <span className="bg-green-100 text-green-800 rounded-full px-2 py-0.5 text-xs font-bold">
+                              ✓ Resolved
+                            </span>
+                          )}
+                          {isQueued && (
+                            <span className="bg-orange-100 text-orange-800 rounded-full px-2 py-0.5 text-xs font-bold">
+                              Queued in Vault
+                            </span>
+                          )}
+                          {item.status === 'IN_PROGRESS' && (
+                            <span className="bg-blue-100 text-blue-800 rounded-full px-2 py-0.5 text-xs font-bold">
+                              In Progress
+                            </span>
+                          )}
+                          {item.status === 'SYNCED' && (
+                            <span className="bg-emerald-100 text-emerald-800 rounded-full px-2 py-0.5 text-xs font-bold">
+                              Synced JMC
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Thumbnail & Content */}
+                        <div className="flex gap-3 items-center">
                           <img 
                             src={item.imageUrl} 
                             alt={item.title} 
-                            className="w-full h-full object-cover"
-                            loading="lazy"
+                            className="w-16 h-16 rounded-lg object-cover bg-slate-100 shrink-0" 
                           />
-                          <div className="absolute top-2.5 left-2.5 bg-slate-900/80 backdrop-blur-sm text-white px-2 py-0.5 rounded-md text-[10px] font-semibold">
-                            {item.category}
-                          </div>
-                          
-                          {/* Status Badge */}
-                          <div className="absolute top-2.5 right-2.5">
-                            {isQueued && (
-                              <span className="bg-brandOrange text-white px-2 py-0.5 rounded-md text-[10px] font-bold shadow-sm flex items-center gap-1">
-                                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-                                Local Vault (Queued)
-                              </span>
-                            )}
-                            {isResolved && (
-                              <span className="bg-brandGreen text-white px-2 py-0.5 rounded-md text-[10px] font-bold shadow-sm flex items-center gap-1">
-                                ✓ Resolved
-                              </span>
-                            )}
-                            {item.status === 'IN_PROGRESS' && (
-                              <span className="bg-blue-600 text-white px-2 py-0.5 rounded-md text-[10px] font-bold shadow-sm">
-                                Field Team Dispatched
-                              </span>
-                            )}
-                            {item.status === 'SYNCED' && (
-                              <span className="bg-emerald-600 text-white px-2 py-0.5 rounded-md text-[10px] font-bold shadow-sm">
-                                Synced with JMC
-                              </span>
-                            )}
-                          </div>
-
-                          {/* AI Verification Watermark */}
-                          <div className="absolute bottom-2 right-2.5 bg-black/65 text-white text-[9px] px-1.5 py-0.5 rounded font-mono">
-                            AI Check: {item.aiConfidence}% Verified
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-sm font-bold text-slate-900 leading-snug truncate">{item.title}</h3>
+                            <p className="text-xs text-slate-500 mt-0.5 truncate">{item.location}</p>
+                            <span className="text-[10px] text-slate-400 font-mono mt-0.5 block">{item.id} · {item.timeAgo}</span>
                           </div>
                         </div>
 
-                        {/* Card Content */}
-                        <div className="p-3.5 space-y-2">
-                          <div>
-                            <div className="flex items-center justify-between">
-                              <h3 className="text-sm font-bold text-slate-900 leading-snug">{item.title}</h3>
-                              <span className="text-[10px] font-mono text-slate-400 font-semibold">{item.id}</span>
-                            </div>
-                            <div className="flex items-center gap-1 text-[11px] text-slate-500 mt-1">
-                              <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                              </svg>
-                              <span>{item.location}</span>
-                              <span>·</span>
-                              <span>{item.timeAgo}</span>
-                            </div>
-                          </div>
-
-                          {/* Footer details */}
-                          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                            <div className="flex items-center gap-2">
-                              <button className="flex items-center gap-1 text-slate-600 hover:text-brandOrange font-medium">
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
-                                </svg>
-                                <span>{item.votes} citizens impacted</span>
-                              </button>
-                            </div>
-                            <span className="text-[10px] font-mono text-slate-400">JMC Ward 12</span>
-                          </div>
+                        {/* Footer */}
+                        <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                          <span>{item.votes} citizens impacted</span>
+                          <span className="text-[10px] font-mono text-emerald-700 font-semibold">AI Check: {item.aiConfidence}%</span>
                         </div>
                       </div>
                     );
@@ -401,192 +306,205 @@
               </div>
             )}
 
-            {/* SCREEN 2: REPORT CAMERA (EDGE AI VIEWFINDER) */}
-            {currentTab === 'camera' && (
-              <div className="space-y-4 flex flex-col h-full">
+            {/* SCREEN 2: REPORT ISSUE (EDGE AI) */}
+            {currentTab === 'report' && (
+              <div className="space-y-4">
                 <div>
-                  <h2 className="text-lg font-bold text-slate-900 tracking-tight">Camera Viewfinder</h2>
-                  <p className="text-xs text-slate-500">Edge AI Photometry & TFLite Pothole Detection</p>
+                  <h2 className="text-lg font-bold text-slate-900 tracking-tight">Report Civic Issue</h2>
+                  <p className="text-xs text-slate-500">On-device edge AI signs ticket without internet</p>
                 </div>
 
-                {/* Sleek Camera Viewfinder Box */}
-                <div className="relative rounded-2xl overflow-hidden bg-black aspect-[3/4] border-2 border-slate-800 shadow-lg flex flex-col justify-between p-4">
-                  {/* Real road preview background */}
-                  <img 
-                    src="https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=800&auto=format&fit=crop&q=80" 
-                    alt="Road viewfinder"
-                    className="absolute inset-0 w-full h-full object-cover opacity-80"
-                  />
-
-                  {/* Top HUD Stats */}
-                  <div className="relative z-10 flex items-center justify-between text-white text-[11px] font-mono">
-                    <div className="bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-md flex items-center gap-1.5 border border-white/10">
-                      <span className="w-2 h-2 rounded-full bg-brandGreen"></span>
-                      <span>GPS: 32.7058°N, 74.8732°E</span>
-                    </div>
-                    <div className="bg-black/60 backdrop-blur-md px-2 py-1 rounded-md text-[10px] text-brandOrange font-bold border border-white/10">
-                      TFLite NPU Active
-                    </div>
-                  </div>
-
-                  {/* AI Detection Reticle / Target Bounding Box */}
-                  <div className="relative z-10 my-auto flex flex-col items-center justify-center">
-                    <div className="w-52 h-44 border-2 border-brandOrange rounded-lg relative flex flex-col justify-between p-2 shadow-[0_0_15px_rgba(232,118,12,0.4)]">
-                      {/* Corner Target Accents */}
-                      <div className="absolute -top-1 -left-1 w-3 h-3 border-t-2 border-l-2 border-white"></div>
-                      <div className="absolute -top-1 -right-1 w-3 h-3 border-t-2 border-r-2 border-white"></div>
-                      <div className="absolute -bottom-1 -left-1 w-3 h-3 border-b-2 border-l-2 border-white"></div>
-                      <div className="absolute -bottom-1 -right-1 w-3 h-3 border-b-2 border-r-2 border-white"></div>
-
-                      {/* Pill info on bounding box */}
-                      <div className="self-start bg-brandOrange text-white text-[9px] font-bold px-2 py-0.5 rounded shadow">
-                        POTHOLE DETECTED · 94.2%
-                      </div>
-
-                      <div className="self-end bg-black/70 backdrop-blur-sm text-white text-[8px] font-mono px-1.5 py-0.5 rounded border border-white/20">
-                        Laplacian Variance: 342.1 (Sharp)
-                      </div>
-                    </div>
-                    <span className="text-[10px] text-white/90 font-mono mt-2 bg-black/50 px-2 py-0.5 rounded backdrop-blur-sm">
-                      Ward 12 · Trikuta Nagar Sector 4
-                    </span>
-                  </div>
-
-                  {/* Bottom AI Telemetry Strip */}
-                  <div className="relative z-10 bg-black/75 backdrop-blur-md p-2.5 rounded-xl border border-white/10 text-white text-[11px] font-mono flex items-center justify-between">
-                    <div>
-                      <div className="text-brandGreen font-bold">✓ Clarity: 93.8% PASS</div>
-                      <div className="text-[9px] text-slate-300">SHA-256: 8F2A-91C8-3D4E</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-[9px] text-slate-400">Payload: 48 KB</div>
-                      <div className="text-[9px] text-brandOrange font-semibold">ChaCha20 Envelope</div>
-                    </div>
+                {/* Category Chips */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider font-mono">Category</label>
+                  <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
+                    {CATEGORY_CHIPS.map(chip => {
+                      const isSel = selectedChip.id === chip.id;
+                      return (
+                        <button
+                          key={chip.id}
+                          onClick={() => setSelectedChip(chip)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors border ${
+                            isSel 
+                              ? 'bg-brandOrange text-white border-brandOrange' 
+                              : 'bg-white text-slate-700 border-slate-200'
+                          }`}
+                        >
+                          {chip.title}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
-                {/* Primary Orange CTA Button */}
+                {/* Simulated Camera Viewfinder Box (Edge AI Validation) */}
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-center text-xs font-bold text-slate-700 font-mono">
+                    <span>EDGE AI VIEWFINDER</span>
+                    <span className="text-green-700 bg-green-100 px-2 py-0.5 rounded-full text-[10px]">TFLite Model Active</span>
+                  </div>
+
+                  <div className="relative rounded-2xl overflow-hidden bg-black aspect-[4/3] border border-slate-300 shadow-sm flex flex-col justify-between p-3">
+                    <img 
+                      src={selectedChip.preset} 
+                      alt="Camera preview"
+                      className="absolute inset-0 w-full h-full object-cover opacity-85"
+                    />
+
+                    {/* Top GPS Overlay */}
+                    <div className="relative z-10 flex justify-between items-center text-white text-[10px] font-mono">
+                      <span className="bg-black/60 px-2 py-0.5 rounded backdrop-blur-sm">
+                        GPS: 32.7058°N, 74.8732°E · Ward 12
+                      </span>
+                      <span className="bg-brandOrange px-1.5 py-0.5 rounded text-[9px] font-bold">NPU 12ms</span>
+                    </div>
+
+                    {/* Center Bounding Box */}
+                    <div className="relative z-10 self-center border-2 border-brandOrange rounded-lg p-2 bg-brandOrange/10 shadow-[0_0_12px_rgba(232,118,12,0.5)]">
+                      <span className="bg-brandOrange text-white text-[10px] font-bold px-2 py-0.5 rounded shadow block">
+                        Pothole Detected - 94%
+                      </span>
+                    </div>
+
+                    {/* Bottom Telemetry Readout */}
+                    <div className="relative z-10 bg-black/75 backdrop-blur-sm p-2 rounded-xl text-white text-[10px] font-mono flex justify-between items-center">
+                      <span className="text-brandGreen font-bold">✓ Clarity: 93.8% PASS</span>
+                      <span className="text-slate-300">SHA-256: 8F2A-91C8</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Input Fields */}
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Location / Landmark</label>
+                    <input 
+                      type="text"
+                      value={locationInput}
+                      onChange={(e) => setLocationInput(e.target.value)}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-brandOrange"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Issue Details</label>
+                    <textarea 
+                      rows={2}
+                      value={desc}
+                      onChange={(e) => setDesc(e.target.value)}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-brandOrange"
+                    />
+                  </div>
+                </div>
+
+                {/* Prominent Orange Button */}
                 <button
-                  onClick={handleSaveReportFromCamera}
-                  className="w-full py-4 bg-brandOrange hover:bg-orange-600 active:scale-[0.98] text-white font-bold text-sm rounded-xl shadow-lg transition-all flex items-center justify-center gap-2"
+                  onClick={handleSaveReport}
+                  className="w-full py-3.5 bg-brandOrange hover:bg-orange-600 active:scale-[0.98] text-white font-bold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
                 >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
-                  <span>Secure in Offline Vault</span>
+                  <span>Save to Offline Vault</span>
                 </button>
-
-                <p className="text-center text-[11px] text-slate-500 font-medium">
-                  Stores directly to phone memory. Dispatches to JMC automatically when signal recovers.
-                </p>
               </div>
             )}
 
-            {/* SCREEN 3: OFFLINE VAULT & SYNC */}
+            {/* SCREEN 3: OFFLINE VAULT */}
             {currentTab === 'vault' && (
               <div className="space-y-4">
-                
-                {/* Header */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between pb-1">
                   <div>
                     <h2 className="text-lg font-bold text-slate-900 tracking-tight">Offline Vault</h2>
                     <p className="text-xs text-slate-500">ChaCha20 Encrypted On-Device Buffer</p>
                   </div>
-                  <span className="bg-brandOrange/15 text-brandOrange font-bold text-xs px-2.5 py-1 rounded-full">
-                    {queuedCount} Pending Upload
+                  <span className="bg-orange-100 text-orange-800 font-bold text-xs px-2.5 py-1 rounded-full">
+                    {queuedCount} Pending Sync
                   </span>
                 </div>
 
-                {/* Delta Sync Control Card */}
-                <div className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-sm space-y-3">
+                {/* Sync Controller Card */}
+                <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-sm font-bold text-slate-900">JMC Delta Sync Pipeline</h3>
+                      <h3 className="text-sm font-bold text-slate-900">
+                        {isOnline ? "4G JMC Link Available" : "Dead-Zone Mode Active"}
+                      </h3>
                       <p className="text-[11px] text-slate-500">
-                        {isOnline ? "4G link available to push buffered payloads" : "Waiting for network coverage in Ward 12"}
+                        {isOnline ? "Ready to push delta packets to central command" : "Buffered securely in on-device SQLite ledger"}
                       </p>
                     </div>
-                    <span className={`w-2.5 h-2.5 rounded-full ${isOnline ? 'bg-brandGreen animate-ping' : 'bg-brandRed'}`}></span>
+                    <span className={`w-2.5 h-2.5 rounded-full ${isOnline ? 'bg-brandGreen animate-pulse' : 'bg-brandRed'}`}></span>
                   </div>
 
-                  {/* Sync progress bar */}
+                  {/* Progress bar when syncing */}
                   {isSyncing && (
-                    <div className="space-y-1.5 pt-1">
+                    <div className="space-y-1 pt-1">
                       <div className="flex justify-between text-[10px] font-mono text-slate-500">
                         <span>Uploading delta batch...</span>
                         <span>{syncProgress}%</span>
                       </div>
                       <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                        <div 
-                          className="bg-brandGreen h-full transition-all duration-300 rounded-full"
-                          style={{ width: `${syncProgress}%` }}
-                        ></div>
+                        <div className="bg-brandGreen h-full transition-all duration-300 rounded-full" style={{ width: `${syncProgress}%` }}></div>
                       </div>
                     </div>
                   )}
 
-                  {/* Sync Trigger Button */}
-                  <button
-                    onClick={handleSyncVault}
-                    disabled={isSyncing || queuedCount === 0}
-                    className={`w-full py-2.5 px-4 rounded-lg font-semibold text-xs transition-all flex items-center justify-center gap-2 ${
-                      queuedCount === 0 
-                        ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                        : isOnline
-                        ? 'bg-brandGreen hover:bg-emerald-700 text-white shadow-md active:scale-[0.98]'
-                        : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
-                    }`}
-                  >
-                    {isSyncing ? (
-                      <span>Syncing {queuedCount} records...</span>
-                    ) : queuedCount === 0 ? (
-                      <span>✓ All Local Records Synced</span>
-                    ) : (
-                      <>
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        <span>{isOnline ? `Upload ${queuedCount} Buffered Reports Now` : "Simulate 4G & Upload"}</span>
-                      </>
-                    )}
-                  </button>
+                  {/* Clean Sync Now Button when Online */}
+                  {isOnline ? (
+                    <button
+                      onClick={handleSyncNow}
+                      disabled={isSyncing || queuedCount === 0}
+                      className={`w-full py-2.5 px-4 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 ${
+                        queuedCount === 0 
+                          ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
+                          : 'bg-brandGreen hover:bg-emerald-700 text-white shadow-sm'
+                      }`}
+                    >
+                      {isSyncing ? "Syncing..." : queuedCount === 0 ? "✓ All Records Synced" : `Sync Now (${queuedCount} Tickets)`}
+                    </button>
+                  ) : (
+                    <div className="bg-red-50 text-red-800 text-xs px-3 py-2 rounded-lg flex items-center gap-2 font-medium">
+                      <span>Toggle header to 'Online' to trigger central delta-sync.</span>
+                    </div>
+                  )}
                 </div>
 
-                {/* Queue Items List */}
-                <div className="space-y-2">
-                  <h3 className="text-xs font-bold text-slate-600 uppercase tracking-wider">Encrypted SQLite Records</h3>
-                  
-                  {reports.map((item, idx) => {
-                    const isQueued = item.status === 'QUEUED';
+                {/* List of Tickets Waiting for Sync */}
+                <div className="space-y-2.5">
+                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider font-mono">
+                    Queued Tickets (ChaCha20 Encrypted)
+                  </h3>
+
+                  {reports.map(ticket => {
+                    const isQueued = ticket.status === 'QUEUED';
                     return (
                       <div 
-                        key={item.id} 
-                        className="bg-white rounded-xl border border-slate-200/80 p-3 shadow-sm flex items-center justify-between gap-3"
+                        key={ticket.id} 
+                        className="bg-white rounded-xl p-3.5 shadow-sm border border-gray-100 flex items-center justify-between gap-3"
                       >
-                        <div className="flex items-center gap-3">
-                          <img 
-                            src={item.imageUrl} 
-                            alt={item.title} 
-                            className="w-12 h-12 rounded-lg object-cover bg-slate-100 shrink-0" 
-                          />
-                          <div>
-                            <div className="text-xs font-bold text-slate-900 leading-tight">{item.title}</div>
-                            <div className="text-[10px] text-slate-500 mt-0.5">{item.location}</div>
-                            <div className="text-[9px] font-mono text-slate-400 mt-0.5">SHA: {item.hash || "8F2A-91C8"} · 48 KB</div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-xs font-bold text-slate-900">{ticket.id}</span>
+                            <span className="text-xs text-slate-700 font-medium truncate">· {ticket.category}</span>
                           </div>
+                          <p className="text-xs text-slate-500 truncate mt-0.5">{ticket.location}</p>
+                          <span className="text-[10px] font-mono text-slate-400 mt-0.5 block">
+                            SHA: {ticket.hash || "8F2A-91C8"} · 48 KB
+                          </span>
                         </div>
 
-                        <div className="text-right shrink-0">
+                        <div className="shrink-0 text-right">
                           {isQueued ? (
-                            <span className="inline-block bg-orange-100 text-brandOrange text-[10px] font-bold px-2 py-0.5 rounded-full">
+                            <span className="bg-orange-100 text-orange-800 rounded-full px-2.5 py-0.5 text-[10px] font-bold">
                               Waiting
                             </span>
                           ) : (
-                            <span className="inline-block bg-emerald-100 text-brandGreen text-[10px] font-bold px-2 py-0.5 rounded-full">
-                              Synced
+                            <span className="bg-green-100 text-green-800 rounded-full px-2.5 py-0.5 text-[10px] font-bold">
+                              ✓ Synced
                             </span>
                           )}
-                          <div className="text-[9px] text-slate-400 font-mono mt-1">{item.timeAgo}</div>
+                          <span className="text-[10px] font-mono text-slate-400 block mt-1">{ticket.timeAgo}</span>
                         </div>
                       </div>
                     );
@@ -597,7 +515,7 @@
           </main>
 
           {/* 3. FIXED BOTTOM NAVIGATION BAR */}
-          <nav className="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-200/80 px-4 py-2 flex items-center justify-around z-30 shadow-[0_-4px_10px_rgba(0,0,0,0.03)]">
+          <nav className="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-200/80 px-6 py-2 flex items-center justify-between z-30 shadow-lg">
             
             {/* Tab 1: Home */}
             <button
@@ -612,23 +530,22 @@
               <span className="text-[10px] font-semibold">Home</span>
             </button>
 
-            {/* Tab 2: Highlighted Camera FAB in center */}
+            {/* Tab 2: Report Issue (FAB in center) */}
             <button
-              onClick={() => setCurrentTab('camera')}
+              onClick={() => setCurrentTab('report')}
               className="flex flex-col items-center -mt-5 group"
             >
               <div className={`w-13 h-13 p-3 rounded-full bg-brandOrange text-white shadow-lg transition-transform active:scale-95 group-hover:bg-orange-600 border-4 border-appBg flex items-center justify-center ${
-                currentTab === 'camera' ? 'ring-2 ring-brandOrange/50' : ''
+                currentTab === 'report' ? 'ring-2 ring-brandOrange/50' : ''
               }`}>
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M12 4v16m8-8H4" />
                 </svg>
               </div>
               <span className="text-[10px] font-bold text-slate-700 mt-1">Report</span>
             </button>
 
-            {/* Tab 3: Vault with Badge */}
+            {/* Tab 3: My Vault */}
             <button
               onClick={() => setCurrentTab('vault')}
               className={`flex flex-col items-center gap-1 relative transition-colors ${
