@@ -1,0 +1,6 @@
+{
+  "name": "HyperEdge",
+  "description": "Offline-first civic grievance reporting system for Jammu Smart City",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
