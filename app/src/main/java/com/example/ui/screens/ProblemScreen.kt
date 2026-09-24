@@ -50,7 +50,9 @@ import com.example.ui.theme.SlateSecondary
 @Composable
 fun ProblemScreen(
     isOnline: Boolean,
+    isHindi: Boolean = false,
     onToggleOnline: () -> Unit,
+    onToggleLanguage: () -> Unit = {},
     onNext: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -62,7 +64,9 @@ fun ProblemScreen(
         HyperEdgeHeader(
             screenNumber = 2,
             isOnline = isOnline,
-            onToggleOnline = onToggleOnline
+            isHindi = isHindi,
+            onToggleOnline = onToggleOnline,
+            onToggleLanguage = onToggleLanguage
         )
 
         Column(

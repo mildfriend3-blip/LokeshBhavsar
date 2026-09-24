@@ -51,7 +51,7 @@ abstract class AppDatabase : RoomDatabase() {
                     id = "HYE-0042",
                     category = "Sanitation & Garbage Overflow",
                     description = "Heavy municipal waste accumulation outside Sector 4 primary dump enclosure. Poses severe sanitary block along corridor.",
-                    location = "Ward 12 · Trikuta Nagar, Sector 4 / Zone 2 Division",
+                    location = "Ward 12 · Trikuta Nagar, Sector 4 / Zone 2",
                     coordinates = "32.7058° N, 74.8732° E",
                     status = "SEALED",
                     timestamp = System.currentTimeMillis() - 1200000,
@@ -66,7 +66,7 @@ abstract class AppDatabase : RoomDatabase() {
                 GrievanceReport(
                     id = "HYE-0041",
                     category = "Pothole / Road Gap",
-                    description = "Deep structural depression (approx 1.2m wide) near Canal Road bend causing traffic congestion and axle damage risk.",
+                    description = "Deep structural depression (approx 1.2m wide) filled with water near Canal Road bend causing traffic congestion and axle damage risk.",
                     location = "Ward 12 · Trikuta Nagar Canal Road, Sector 3",
                     coordinates = "32.7042° N, 74.8710° E",
                     status = "PENDING",
@@ -82,7 +82,7 @@ abstract class AppDatabase : RoomDatabase() {
                 GrievanceReport(
                     id = "HYE-0040",
                     category = "Drainage Clog",
-                    description = "Monsoon run-off drain choked with construction debris and silt, backing water into lane 6 residential entry.",
+                    description = "Monsoon run-off drain choked with construction debris and silt, backing blackwater into lane 6 residential entry.",
                     location = "Ward 14 · Gandhi Nagar Block C, Main Drain Link",
                     coordinates = "32.7115° N, 74.8690° E",
                     status = "PENDING",
@@ -110,6 +110,38 @@ abstract class AppDatabase : RoomDatabase() {
                     payloadKb = 38,
                     imagePreset = "light",
                     voiceNoteDuration = "0:06"
+                ),
+                GrievanceReport(
+                    id = "HYE-0038",
+                    category = "Water Leakage",
+                    description = "Underground pressure main breached leaking continuous potable stream over road macadam near Channi Himmat Sector 1.",
+                    location = "Ward 17 · Channi Himmat, Sector 1 Main Chowk",
+                    coordinates = "32.6934° N, 74.8912° E",
+                    status = "SYNCED",
+                    timestamp = System.currentTimeMillis() - 28800000,
+                    formattedTime = "08:24:10 IST",
+                    shaHash = "SHA-256: 7A1C-99B2-E40F-120C",
+                    aiConfidence = 95,
+                    photometryStatus = "CLEAR PHOTOMETRY · NO BLUR",
+                    payloadKb = 49,
+                    imagePreset = "water",
+                    voiceNoteDuration = "0:11"
+                ),
+                GrievanceReport(
+                    id = "HYE-0037",
+                    category = "Sanitation & Garbage Overflow",
+                    description = "Market waste bin cleared and disinfected by field sanitization brigade team near Talab Tillo vegetable mandi.",
+                    location = "Ward 4 · Talab Tillo, Mandi Link Road",
+                    coordinates = "32.7180° N, 74.8420° E",
+                    status = "SYNCED",
+                    timestamp = System.currentTimeMillis() - 43200000,
+                    formattedTime = "06:10:04 IST",
+                    shaHash = "SHA-256: 12B3-44CD-89EE-FFA0",
+                    aiConfidence = 93,
+                    photometryStatus = "CLEAR PHOTOMETRY · NO BLUR",
+                    payloadKb = 41,
+                    imagePreset = "sanitation",
+                    voiceNoteDuration = "0:00"
                 )
             )
             dao.insertAll(initialList)

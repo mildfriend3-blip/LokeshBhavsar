@@ -24,7 +24,6 @@ import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -34,14 +33,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.data.model.GrievanceReport
 import com.example.ui.components.HyperEdgeFooter
 import com.example.ui.components.HyperEdgeHeader
@@ -54,6 +58,7 @@ import com.example.ui.theme.NavyDark
 import com.example.ui.theme.NavyPrimary
 import com.example.ui.theme.OrangeAccent
 import com.example.ui.theme.OrangeTint
+import com.example.ui.theme.RedError
 import com.example.ui.theme.SlateLight
 import com.example.ui.theme.SlateSecondary
 
@@ -61,23 +66,35 @@ import com.example.ui.theme.SlateSecondary
 fun EdgeAiValidationScreen(
     latestReport: GrievanceReport?,
     isOnline: Boolean,
+    isHindi: Boolean = false,
     onToggleOnline: () -> Unit,
+    onToggleLanguage: () -> Unit = {},
     onRetakePhoto: () -> Unit,
     onProceedToStorage: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     val report = latestReport ?: GrievanceReport(
         id = "HYE-0042",
         category = "Sanitation & Garbage Overflow",
         description = "Sanitary waste corridor accumulation near Trikuta Nagar Sector 4.",
-        location = "Ward 12 · Trikuta Nagar, Sector 4 / Zone 2 Division",
+        location = "Ward 12 · Trikuta Nagar, Sector 4 / Zone 2",
         status = "SEALED",
-        formattedTime = "Just now",
+        formattedTime = "14:12:08 IST",
         shaHash = "SHA-256: 8F2A-91C8-3D4E-7B21",
         aiConfidence = 94,
         photometryStatus = "CLEAR PHOTOMETRY · NO BLUR",
-        payloadKb = 47
+        payloadKb = 47,
+        imagePreset = "sanitation"
     )
+
+    val photoUrl = when (report.imagePreset) {
+        "sanitation" -> "https://images.unsplash.com/photo-1605600659873-d808a13e4d2a?w=400&q=80"
+        "water" -> "https://images.unsplash.com/photo-1584467735815-f778f274e296?w=400&q=80"
+        "pothole" -> "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=400&q=80"
+        "light" -> "https://images.unsplash.com/photo-1509114397022-ed747cca3f65?w=400&q=80"
+        else -> "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=400&q=80"
+    }
 
     Column(
         modifier = modifier
@@ -87,7 +104,9 @@ fun EdgeAiValidationScreen(
         HyperEdgeHeader(
             screenNumber = 5,
             isOnline = isOnline,
-            onToggleOnline = onToggleOnline
+            isHindi = isHindi,
+            onToggleOnline = onToggleOnline,
+            onToggleLanguage = onToggleLanguage
         )
 
         Column(
@@ -104,15 +123,15 @@ fun EdgeAiValidationScreen(
             ) {
                 Column {
                     Text(
-                        text = "Edge AI Validation",
+                        text = if (isHindi) "एज एआई सत्यापन" else "Edge AI Validation",
                         color = NavyPrimary,
-                        fontSize = 20.sp,
+                        fontSize = 19.sp,
                         fontWeight = FontWeight.Black
                     )
                     Text(
-                        text = "INCIDENT PIPELINE · ZERO-LEAK ON-DEVICE AUDIT",
+                        text = "INCIDENT PIPELINE · ON-DEVICE VISION AUDIT",
                         color = SlateSecondary,
-                        fontSize = 10.sp,
+                        fontSize = 9.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold
                     )
@@ -136,15 +155,26 @@ fun EdgeAiValidationScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Large Photo Preview with Overlay Grid & Detection HUD
+            // Large Photo Preview with Real Photo & Edge AI Detection HUD
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp)
+                    .height(210.dp)
                     .clip(RoundedCornerShape(4.dp))
                     .border(1.dp, CardBorderNavy, RoundedCornerShape(4.dp))
                     .background(NavyDark)
             ) {
+                // Real Image
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(photoUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = "Validated evidence",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+
                 // Overlay Grid Canvas
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     val w = size.width
@@ -152,16 +182,16 @@ fun EdgeAiValidationScreen(
                     val dash = PathEffect.dashPathEffect(floatArrayOf(6f, 6f), 0f)
 
                     // 3x3 rule of thirds grid
-                    drawLine(Color(0x33FFFFFF), Offset(w * 0.33f, 0f), Offset(w * 0.33f, h), 1f, pathEffect = dash)
-                    drawLine(Color(0x33FFFFFF), Offset(w * 0.66f, 0f), Offset(w * 0.66f, h), 1f, pathEffect = dash)
-                    drawLine(Color(0x33FFFFFF), Offset(0f, h * 0.33f), Offset(w, h * 0.33f), 1f, pathEffect = dash)
-                    drawLine(Color(0x33FFFFFF), Offset(0f, h * 0.66f), Offset(w, h * 0.66f), 1f, pathEffect = dash)
+                    drawLine(Color(0x55FFFFFF), Offset(w * 0.33f, 0f), Offset(w * 0.33f, h), 1f, pathEffect = dash)
+                    drawLine(Color(0x55FFFFFF), Offset(w * 0.66f, 0f), Offset(w * 0.66f, h), 1f, pathEffect = dash)
+                    drawLine(Color(0x55FFFFFF), Offset(0f, h * 0.33f), Offset(w, h * 0.33f), 1f, pathEffect = dash)
+                    drawLine(Color(0x55FFFFFF), Offset(0f, h * 0.66f), Offset(w, h * 0.66f), 1f, pathEffect = dash)
 
                     // AI Bounding Box in Orange
                     drawRect(
                         color = OrangeAccent,
-                        topLeft = Offset(w * 0.18f, h * 0.18f),
-                        size = androidx.compose.ui.geometry.Size(w * 0.64f, h * 0.64f),
+                        topLeft = Offset(w * 0.15f, h * 0.15f),
+                        size = androidx.compose.ui.geometry.Size(w * 0.70f, h * 0.70f),
                         style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx())
                     )
                 }
@@ -169,7 +199,7 @@ fun EdgeAiValidationScreen(
                 // AI Detection Label on Top-Left of Box
                 Box(
                     modifier = Modifier
-                        .padding(top = 22.dp, start = 26.dp)
+                        .padding(top = 18.dp, start = 22.dp)
                         .clip(RoundedCornerShape(2.dp))
                         .background(OrangeAccent)
                         .padding(horizontal = 6.dp, vertical = 2.dp)
@@ -183,31 +213,32 @@ fun EdgeAiValidationScreen(
                     )
                 }
 
-                // Center Telemetry HUD
-                Column(
-                    modifier = Modifier.align(Alignment.Center),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                // Rubber-stamp seal in corner
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(bottom = 30.dp, end = 12.dp)
+                        .rotate(-5f)
+                        .border(2.dp, RedError, RoundedCornerShape(3.dp))
+                        .background(Color.White.copy(alpha = 0.9f))
+                        .padding(horizontal = 8.dp, vertical = 3.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Shield,
-                        contentDescription = null,
-                        tint = GreenSuccess,
-                        modifier = Modifier.size(34.dp)
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "LIGHTWEIGHT INT8 QUANTIZED MODEL",
-                        color = Color.White,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.Monospace
-                    )
-                    Text(
-                        text = "LATENCY: 42ms · INFERENCE: OFFLINE NPU",
-                        color = SlateLight,
-                        fontSize = 8.sp,
-                        fontFamily = FontFamily.Monospace
-                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "SEALED",
+                            color = RedError,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Black,
+                            fontFamily = FontFamily.Monospace
+                        )
+                        Text(
+                            text = "JMC WARD 12",
+                            color = RedError,
+                            fontSize = 6.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
                 }
 
                 // Bottom HUD strip
@@ -223,7 +254,7 @@ fun EdgeAiValidationScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "PHOTOMETRIC ISO: 160 · 1/250s · f/1.8",
+                            text = "PHOTOMETRIC ISO: 160 · f/1.8 · NO BLUR",
                             color = SlateLight,
                             fontSize = 8.sp,
                             fontFamily = FontFamily.Monospace

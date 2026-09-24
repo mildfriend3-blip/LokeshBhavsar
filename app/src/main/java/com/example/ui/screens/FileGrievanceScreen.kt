@@ -22,16 +22,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.DeleteSweep
-import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.filled.WaterDamage
-import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -49,12 +44,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.data.model.GrievanceReport
 import com.example.ui.components.HyperEdgeFooter
 import com.example.ui.components.HyperEdgeHeader
@@ -72,60 +70,75 @@ import com.example.ui.theme.RedTint
 import com.example.ui.theme.SlateLight
 import com.example.ui.theme.SlateSecondary
 
-data class CivicCategory(
+data class CivicCategoryPhoto(
     val id: String,
-    val name: String,
-    val icon: ImageVector,
+    val nameEn: String,
+    val nameHi: String,
+    val photoUrl: String,
     val preset: String,
-    val defaultDesc: String
+    val defaultDesc: String,
+    val fallbackTone: Color
 )
 
-val CATEGORIES = listOf(
-    CivicCategory(
+val REAL_PHOTO_CATEGORIES = listOf(
+    CivicCategoryPhoto(
         id = "sanitation",
-        name = "Sanitation & Garbage Overflow",
-        icon = Icons.Default.DeleteSweep,
+        nameEn = "Sanitation & Garbage Overflow",
+        nameHi = "सफाई एवं कचरा जमाव",
+        photoUrl = "https://images.unsplash.com/photo-1605600659873-d808a13e4d2a?w=400&q=80",
         preset = "sanitation",
-        defaultDesc = "Municipal bin overflow at Trikuta Nagar Sector 4 corner. Uncollected organic and dry waste spilling onto carriageway."
+        defaultDesc = "Municipal bin overflow at Trikuta Nagar Sector 4 corner. Uncollected organic and dry waste spilling onto carriageway.",
+        fallbackTone = Color(0xFF4A4433)
     ),
-    CivicCategory(
+    CivicCategoryPhoto(
         id = "water",
-        name = "Water Leakage",
-        icon = Icons.Default.WaterDrop,
+        nameEn = "Water Leakage",
+        nameHi = "पेयजल पाइपलाइन रिसाव",
+        photoUrl = "https://images.unsplash.com/photo-1584467735815-f778f274e296?w=400&q=80",
         preset = "water",
-        defaultDesc = "High-pressure municipal potable water pipeline rupture near house #42 lane. Road surface erosion imminent."
+        defaultDesc = "High-pressure municipal potable water pipeline rupture near house #42 lane. Water gushing onto street surface.",
+        fallbackTone = Color(0xFF234B61)
     ),
-    CivicCategory(
+    CivicCategoryPhoto(
         id = "pothole",
-        name = "Pothole / Road Gap",
-        icon = Icons.Default.Warning,
+        nameEn = "Pothole / Road Gap",
+        nameHi = "सड़क पर गड्ढा / दरार",
+        photoUrl = "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=400&q=80",
         preset = "pothole",
-        defaultDesc = "Deep road fissure (depth > 12cm) following canal culvert excavation. Hazardous for two-wheelers and night traffic."
+        defaultDesc = "Deep road depression with stagnant water near Canal Road culvert. Severe hazard for two-wheelers and night traffic.",
+        fallbackTone = Color(0xFF3B3B3B)
     ),
-    CivicCategory(
+    CivicCategoryPhoto(
         id = "streetlight",
-        name = "Streetlight Outage",
-        icon = Icons.Default.Lightbulb,
+        nameEn = "Streetlight Outage",
+        nameHi = "स्ट्रीट लाइट बंद होना",
+        photoUrl = "https://images.unsplash.com/photo-1509114397022-ed747cca3f65?w=400&q=80",
         preset = "light",
-        defaultDesc = "Three sequential pole lamps dark along Trikuta Sector 4 park perimeter. High security risk."
+        defaultDesc = "Three sequential sodium pole lamps dark along Trikuta Sector 4 park perimeter. High pedestrian security risk.",
+        fallbackTone = Color(0xFF1B232E)
     ),
-    CivicCategory(
+    CivicCategoryPhoto(
         id = "drainage",
-        name = "Drainage Clog",
-        icon = Icons.Default.WaterDamage,
+        nameEn = "Drainage Clog",
+        nameHi = "नाली जाम एवं जलभराव",
+        photoUrl = "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=400&q=80",
         preset = "drainage",
-        defaultDesc = "Stormwater conduit obstructed by silt and plastics. Backflow submerging footpath during light drizzle."
+        defaultDesc = "Stormwater conduit obstructed by silt and plastics. Backflow submerging footpath during light showers.",
+        fallbackTone = Color(0xFF333B32)
     )
 )
 
 @Composable
 fun FileGrievanceScreen(
     isOnline: Boolean,
+    isHindi: Boolean = false,
     onToggleOnline: () -> Unit,
+    onToggleLanguage: () -> Unit = {},
     onSaveAndEncrypt: (GrievanceReport) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var selectedCategory by remember { mutableStateOf(CATEGORIES[0]) }
+    val context = LocalContext.current
+    var selectedCategory by remember { mutableStateOf(REAL_PHOTO_CATEGORIES[0]) }
     var description by remember { mutableStateOf(selectedCategory.defaultDesc) }
     var isRecordingVoice by remember { mutableStateOf(false) }
     var voiceDuration by remember { mutableStateOf("0:00") }
@@ -140,7 +153,9 @@ fun FileGrievanceScreen(
         HyperEdgeHeader(
             screenNumber = 4,
             isOnline = isOnline,
-            onToggleOnline = onToggleOnline
+            isHindi = isHindi,
+            onToggleOnline = onToggleOnline,
+            onToggleLanguage = onToggleLanguage
         )
 
         Column(
@@ -149,7 +164,7 @@ fun FileGrievanceScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(14.dp)
         ) {
-            // Header Info & Sub-label
+            // Header Info & Sub-label (Bilingual)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -157,9 +172,9 @@ fun FileGrievanceScreen(
             ) {
                 Column {
                     Text(
-                        text = "File Grievance",
+                        text = if (isHindi) "शिकायत दर्ज करें / File Grievance" else "File Grievance / शिकायत दर्ज करें",
                         color = NavyPrimary,
-                        fontSize = 20.sp,
+                        fontSize = 18.sp,
                         fontWeight = FontWeight.Black
                     )
                     Text(
@@ -186,19 +201,20 @@ fun FileGrievanceScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // SECTION 1: SELECT GRIEVANCE DOMAIN
+            // SECTION 1: SELECT GRIEVANCE DOMAIN WITH REAL PHOTOS
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(bottom = 6.dp)
             ) {
                 Text(
-                    text = "1. SELECT GRIEVANCE DOMAIN",
+                    text = if (isHindi) "१. श्रेणी चुनें / 1. SELECT DOMAIN" else "1. SELECT GRIEVANCE DOMAIN",
                     color = NavyPrimary,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Black,
-                    fontFamily = FontFamily.Monospace
+                    fontFamily = FontFamily.Monospace,
+                    letterSpacing = 0.5.sp
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Box(
@@ -217,12 +233,13 @@ fun FileGrievanceScreen(
                 }
             }
 
-            // Category selectable cards
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                CATEGORIES.forEach { category ->
+            // Real Photo Category Cards List
+            Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                REAL_PHOTO_CATEGORIES.forEach { category ->
                     val isSelected = selectedCategory.id == category.id
                     val bgColor = if (isSelected) NavyPrimary else Color.White
                     val textColor = if (isSelected) Color.White else NavyPrimary
+                    val subTextColor = if (isSelected) SlateLight else SlateSecondary
                     val borderColor = if (isSelected) OrangeAccent else CardBorderNavy
 
                     Box(
@@ -235,7 +252,7 @@ fun FileGrievanceScreen(
                                 selectedCategory = category
                                 description = category.defaultDesc
                             }
-                            .padding(horizontal = 12.dp, vertical = 9.dp)
+                            .padding(8.dp)
                             .testTag("category_${category.id}")
                     ) {
                         Row(
@@ -243,25 +260,51 @@ fun FileGrievanceScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = category.icon,
-                                    contentDescription = category.name,
-                                    tint = if (isSelected) OrangeAccent else NavyPrimary,
-                                    modifier = Modifier.size(18.dp)
-                                )
+                            Row(
+                                modifier = Modifier.weight(1f),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                // REAL PHOTO THUMBNAIL
+                                Box(
+                                    modifier = Modifier
+                                        .size(52.dp, 44.dp)
+                                        .clip(RoundedCornerShape(3.dp))
+                                        .border(1.dp, if (isSelected) OrangeAccent else CardBorderNavy, RoundedCornerShape(3.dp))
+                                        .background(category.fallbackTone)
+                                ) {
+                                    AsyncImage(
+                                        model = ImageRequest.Builder(context)
+                                            .data(category.photoUrl)
+                                            .crossfade(true)
+                                            .build(),
+                                        contentDescription = category.nameEn,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                }
+
                                 Spacer(modifier = Modifier.width(10.dp))
-                                Text(
-                                    text = category.name,
-                                    color = textColor,
-                                    fontSize = 13.sp,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                                )
+
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = category.nameEn,
+                                        color = textColor,
+                                        fontSize = 13.sp,
+                                        fontWeight = if (isSelected) FontWeight.Black else FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = category.nameHi,
+                                        color = subTextColor,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
                             }
+
                             if (isSelected) {
                                 Box(
                                     modifier = Modifier
-                                        .size(18.dp)
+                                        .size(20.dp)
                                         .clip(CircleShape)
                                         .background(OrangeAccent),
                                     contentAlignment = Alignment.Center
@@ -270,7 +313,7 @@ fun FileGrievanceScreen(
                                         imageVector = Icons.Default.Check,
                                         contentDescription = "Selected",
                                         tint = Color.White,
-                                        modifier = Modifier.size(12.dp)
+                                        modifier = Modifier.size(14.dp)
                                     )
                                 }
                             }
@@ -281,7 +324,7 @@ fun FileGrievanceScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // SECTION 2: EDGE AI VISUAL EVIDENCE
+            // SECTION 2: EDGE AI VISUAL EVIDENCE (REAL PHOTO INSPECTION HUD)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -292,7 +335,8 @@ fun FileGrievanceScreen(
                     color = NavyPrimary,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Black,
-                    fontFamily = FontFamily.Monospace
+                    fontFamily = FontFamily.Monospace,
+                    letterSpacing = 0.5.sp
                 )
                 Box(
                     modifier = Modifier
@@ -313,16 +357,27 @@ fun FileGrievanceScreen(
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            // Photo Preview Area with Tactical Overlays & Category Visual
+            // Real Photo Preview Area with Overlay Grid & Detection HUD
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(160.dp)
+                    .height(180.dp)
                     .clip(RoundedCornerShape(4.dp))
                     .border(1.dp, CardBorderNavy, RoundedCornerShape(4.dp))
                     .background(Color(0xFF132A3E))
             ) {
-                // Background Schematic Canvas with Reticle
+                // Real photographic background from selected category
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(selectedCategory.photoUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = "Captured civic evidence",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+
+                // Tactical Reticle and Green Bounding Box Canvas
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     val w = size.width
                     val h = size.height
@@ -330,62 +385,52 @@ fun FileGrievanceScreen(
 
                     // Reticle lines
                     drawLine(
-                        color = Color(0x553DDCA4),
-                        start = Offset(w * 0.15f, h * 0.5f),
-                        end = Offset(w * 0.85f, h * 0.5f),
+                        color = Color(0x77FFFFFF),
+                        start = Offset(w * 0.2f, h * 0.5f),
+                        end = Offset(w * 0.8f, h * 0.5f),
                         strokeWidth = 1.dp.toPx(),
                         pathEffect = dash
                     )
                     drawLine(
-                        color = Color(0x553DDCA4),
-                        start = Offset(w * 0.5f, h * 0.15f),
-                        end = Offset(w * 0.5f, h * 0.85f),
+                        color = Color(0x77FFFFFF),
+                        start = Offset(w * 0.5f, h * 0.2f),
+                        end = Offset(w * 0.5f, h * 0.8f),
                         strokeWidth = 1.dp.toPx(),
                         pathEffect = dash
                     )
-                    // Bounding Box
+                    // AI Target Box
                     drawRect(
                         color = GreenSuccess,
                         topLeft = Offset(w * 0.22f, h * 0.18f),
                         size = androidx.compose.ui.geometry.Size(w * 0.56f, h * 0.64f),
-                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.5.dp.toPx())
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx())
                     )
                 }
 
-                // Center visual indicator of captured grievance domain
-                Column(
-                    modifier = Modifier.align(Alignment.Center),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                // AI Detection Label on Top-Left of Box
+                Box(
+                    modifier = Modifier
+                        .padding(top = 26.dp, start = 32.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(GreenSuccess)
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
                 ) {
-                    Icon(
-                        imageVector = selectedCategory.icon,
-                        contentDescription = null,
-                        tint = OrangeAccent,
-                        modifier = Modifier.size(36.dp)
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "CLASSIFIER: ${selectedCategory.name.uppercase()}",
+                        text = "DETECTED: ${selectedCategory.nameEn.uppercase()}",
                         color = Color.White,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.Monospace
-                    )
-                    Text(
-                        text = "CONFIDENCE: 94.2% · EDGE TFLITE INT8",
-                        color = GreenSuccess,
-                        fontSize = 8.sp,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Black,
                         fontFamily = FontFamily.Monospace
                     )
                 }
 
-                // Top Overlay: Clear Photometry
+                // Top-Left Badge: Clear Photometry
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .padding(8.dp)
                         .clip(RoundedCornerShape(2.dp))
-                        .background(NavyDark.copy(alpha = 0.85f))
+                        .background(NavyDark.copy(alpha = 0.9f))
                         .padding(horizontal = 6.dp, vertical = 3.dp)
                 ) {
                     Text(
@@ -402,7 +447,7 @@ fun FileGrievanceScreen(
                     modifier = Modifier
                         .align(Alignment.BottomStart)
                         .fillMaxWidth()
-                        .background(NavyDark.copy(alpha = 0.9f))
+                        .background(NavyDark.copy(alpha = 0.92f))
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Row(
@@ -411,12 +456,12 @@ fun FileGrievanceScreen(
                     ) {
                         Text(
                             text = photoHash,
-                            color = Color.White.copy(alpha = 0.85f),
+                            color = Color.White.copy(alpha = 0.9f),
                             fontSize = 8.sp,
                             fontFamily = FontFamily.Monospace
                         )
                         Text(
-                            text = "480×640 · ON-DEVICE",
+                            text = "480×640 · ON-DEVICE NPU",
                             color = OrangeAccent,
                             fontSize = 8.sp,
                             fontFamily = FontFamily.Monospace
@@ -495,6 +540,7 @@ fun FileGrievanceScreen(
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Black,
                 fontFamily = FontFamily.Monospace,
+                letterSpacing = 0.5.sp,
                 modifier = Modifier.padding(bottom = 4.dp)
             )
 
@@ -529,7 +575,7 @@ fun FileGrievanceScreen(
                     }
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "GPS: 32.7058° N, 74.8732° E · Elevation 327m · Field Node Corridor ±2.4m",
+                        text = "GPS: 32.7058° N, 74.8732° E · Accuracy ±2.4m · Jammu Municipality",
                         color = SlateSecondary,
                         fontSize = 9.sp,
                         fontFamily = FontFamily.Monospace
@@ -550,10 +596,11 @@ fun FileGrievanceScreen(
                     color = NavyPrimary,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Black,
-                    fontFamily = FontFamily.Monospace
+                    fontFamily = FontFamily.Monospace,
+                    letterSpacing = 0.5.sp
                 )
                 Text(
-                    text = "HINDI / URDU READY",
+                    text = "HINDI / URDU READY · द्विभाषी",
                     color = SlateSecondary,
                     fontSize = 8.sp,
                     fontFamily = FontFamily.Monospace,
@@ -595,7 +642,7 @@ fun FileGrievanceScreen(
                     .background(if (isRecordingVoice) RedTint else Color(0xFFF7F4EE))
                     .clickable {
                         isRecordingVoice = !isRecordingVoice
-                        voiceDuration = if (isRecordingVoice) "0:07" else "0:12"
+                        voiceDuration = if (isRecordingVoice) "0:07" else "0:14"
                     }
                     .padding(horizontal = 10.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -629,18 +676,24 @@ fun FileGrievanceScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // BOTTOM STICKY ORANGE CTA: "SAVE TO OFFLINE QUEUE & ENCRYPT"
+            // BOTTOM STICKY ORANGE CTA
             Button(
                 onClick = {
                     val newId = "HYE-${(43..99).random().toString().padStart(4, '0')}"
+                    val calendar = java.util.Calendar.getInstance()
+                    val h = calendar.get(java.util.Calendar.HOUR_OF_DAY).toString().padStart(2, '0')
+                    val m = calendar.get(java.util.Calendar.MINUTE).toString().padStart(2, '0')
+                    val s = calendar.get(java.util.Calendar.SECOND).toString().padStart(2, '0')
+                    val exactTime = "$h:$m:$s IST"
+
                     val report = GrievanceReport(
                         id = newId,
-                        category = selectedCategory.name,
+                        category = selectedCategory.nameEn,
                         description = description.ifBlank { selectedCategory.defaultDesc },
-                        location = "Ward 12 · Trikuta Nagar, Sector 4 / Zone 2 Division",
+                        location = "Ward 12 · Trikuta Nagar, Sector 4 / Zone 2",
                         status = "SEALED",
                         timestamp = System.currentTimeMillis(),
-                        formattedTime = "Just now",
+                        formattedTime = exactTime,
                         shaHash = "SHA-256: 8F2A-91C8-3D4E-${(1000..9999).random()}",
                         aiConfidence = 94,
                         photometryStatus = "CLEAR PHOTOMETRY · NO BLUR",
@@ -671,7 +724,7 @@ fun FileGrievanceScreen(
                         text = "SAVE TO OFFLINE QUEUE & ENCRYPT",
                         color = Color.White,
                         fontWeight = FontWeight.Black,
-                        fontSize = 13.sp,
+                        fontSize = 12.sp,
                         letterSpacing = 0.5.sp,
                         fontFamily = FontFamily.Monospace
                     )

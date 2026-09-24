@@ -43,6 +43,9 @@ class HyperEdgeViewModel(application: Application) : AndroidViewModel(applicatio
     private val _isOnline = MutableStateFlow(false) // Default offline for rugged dead-zone simulation
     val isOnline: StateFlow<Boolean> = _isOnline.asStateFlow()
 
+    private val _isHindi = MutableStateFlow(false)
+    val isHindi: StateFlow<Boolean> = _isHindi.asStateFlow()
+
     private val _latestReport = MutableStateFlow<GrievanceReport?>(null)
     val latestReport: StateFlow<GrievanceReport?> = _latestReport.asStateFlow()
 
@@ -74,6 +77,12 @@ class HyperEdgeViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun setScreen(screen: Int) {
         _currentScreen.value = screen
+    }
+
+    fun toggleLanguage() {
+        _isHindi.value = !_isHindi.value
+        val msg = if (_isHindi.value) "हिन्दी भाषा सक्रिय (Hindi Active)" else "English Mode Active"
+        showToast(msg, ToastType.SUCCESS)
     }
 
     fun toggleOnline() {

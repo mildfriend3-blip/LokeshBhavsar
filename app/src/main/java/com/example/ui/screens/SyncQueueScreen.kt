@@ -8,6 +8,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,7 +28,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.CellTower
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Lan
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.SignalCellularAlt
 import androidx.compose.material.icons.filled.SignalCellularConnectedNoInternet0Bar
 import androidx.compose.material.icons.filled.Sync
@@ -59,7 +60,6 @@ import com.example.ui.theme.GreenTint
 import com.example.ui.theme.NavyDark
 import com.example.ui.theme.NavyPrimary
 import com.example.ui.theme.OrangeAccent
-import com.example.ui.theme.OrangeTint
 import com.example.ui.theme.RedError
 import com.example.ui.theme.RedTint
 import com.example.ui.theme.SlateLight
@@ -69,9 +69,11 @@ import com.example.ui.theme.SlateSecondary
 fun SyncQueueScreen(
     reports: List<GrievanceReport>,
     isOnline: Boolean,
+    isHindi: Boolean = false,
     isSyncing: Boolean,
     syncLogs: List<String>,
     onToggleOnline: () -> Unit,
+    onToggleLanguage: () -> Unit = {},
     onSimulateSignalReturn: () -> Unit,
     onProceedToConsole: () -> Unit,
     modifier: Modifier = Modifier
@@ -99,7 +101,9 @@ fun SyncQueueScreen(
         HyperEdgeHeader(
             screenNumber = 7,
             isOnline = isOnline,
-            onToggleOnline = onToggleOnline
+            isHindi = isHindi,
+            onToggleOnline = onToggleOnline,
+            onToggleLanguage = onToggleLanguage
         )
 
         Column(
@@ -116,15 +120,15 @@ fun SyncQueueScreen(
             ) {
                 Column {
                     Text(
-                        text = "Sync Queue",
+                        text = if (isHindi) "सिंक कतार / Sync Queue" else "Sync Queue / सिंक कतार",
                         color = NavyPrimary,
-                        fontSize = 20.sp,
+                        fontSize = 19.sp,
                         fontWeight = FontWeight.Black
                     )
                     Text(
                         text = "PEER-TO-PEER MESH HANDSHAKE · JMC UPLINK",
                         color = SlateSecondary,
-                        fontSize = 10.sp,
+                        fontSize = 9.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold
                     )
@@ -142,9 +146,45 @@ fun SyncQueueScreen(
                 }
             }
 
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // FIX 6: "Last synced 4 min ago" with refresh icon
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.clickable { onSimulateSignalReturn() }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "Refresh",
+                        tint = SlateSecondary,
+                        modifier = Modifier.size(13.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "Last synced 4 min ago (Node JMC-CORRIDOR-042)",
+                        color = SlateSecondary,
+                        fontSize = 10.sp,
+                        fontFamily = FontFamily.Monospace
+                    )
+                }
+
+                Text(
+                    text = "DELTA SYNC ACTIVE",
+                    color = GreenSuccess,
+                    fontSize = 8.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.Monospace
+                )
+            }
+
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Status Card: green MESH LINK ACTIVE · SYNCED when online / red DEAD-ZONE ACTIVE · QUEUED when offline
+            // Status Card
             val cardBg = if (isOnline) GreenTint else RedTint
             val cardBorder = if (isOnline) GreenSuccess else RedError
             val statusColor = if (isOnline) GreenSuccess else RedError
@@ -175,12 +215,12 @@ fun SyncQueueScreen(
                             Text(
                                 text = statusText,
                                 color = statusColor,
-                                fontSize = 13.sp,
+                                fontSize = 12.sp,
                                 fontWeight = FontWeight.Black,
                                 fontFamily = FontFamily.Monospace
                             )
                             Text(
-                                text = if (isOnline) "Field Node connected to JMC optical trunk" else "Packet buffering active on local flash partition",
+                                text = if (isOnline) "Field node authenticated with JMC optical backbone" else "Records encrypted & buffered on device flash partition",
                                 color = SlateSecondary,
                                 fontSize = 10.sp
                             )
@@ -198,7 +238,7 @@ fun SyncQueueScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Progress Bar: "3 of 4 reports synced"
+            // Progress Bar Card: "X of Y reports synced"
             RuggedCard(backgroundColor = Color.White) {
                 Column {
                     Row(
@@ -211,7 +251,8 @@ fun SyncQueueScreen(
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
                             fontFamily = FontFamily.Monospace,
-                            color = NavyPrimary
+                            color = NavyPrimary,
+                            letterSpacing = 0.5.sp
                         )
                         Text(
                             text = "$syncedCount of $totalCount reports synced",
@@ -247,7 +288,7 @@ fun SyncQueueScreen(
                             fontFamily = FontFamily.Monospace
                         )
                         Text(
-                            text = "RETRY ALGORITHM: EXPONENTIAL BACKOFF",
+                            text = "EXPONENTIAL BACKOFF ACTIVE",
                             color = SlateSecondary,
                             fontSize = 8.sp,
                             fontFamily = FontFamily.Monospace
@@ -258,13 +299,14 @@ fun SyncQueueScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Live Log Feed (Monospace Tactical Terminal)
+            // Live Log Feed (Monospace Terminal)
             Text(
                 text = "REAL-TIME TELEMETRY LOG (CHACHA20 ENVELOPE):",
                 color = NavyPrimary,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Black,
                 fontFamily = FontFamily.Monospace,
+                letterSpacing = 0.5.sp,
                 modifier = Modifier.padding(bottom = 4.dp)
             )
 

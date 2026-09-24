@@ -14,9 +14,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.Dashboard
-import androidx.compose.material.icons.filled.Lan
-import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.filled.Drafts
+import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,20 +26,20 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.theme.CardBorderNavy
 import com.example.ui.theme.NavyPrimary
 import com.example.ui.theme.OrangeAccent
-import com.example.ui.theme.SlateLight
 import com.example.ui.theme.SlateSecondary
 
 enum class NavTab(val label: String, val icon: ImageVector, val targetScreen: Int) {
-    HOME("Home", Icons.Default.Dashboard, 6),
+    HOME("Home", Icons.Default.GridView, 6),
     REPORT("Report", Icons.Default.AddCircle, 4),
-    DRAFTS("Drafts", Icons.Default.Sync, 7),
-    PROFILE("Profile", Icons.Default.Lan, 8)
+    DRAFTS("Drafts", Icons.Default.Drafts, 7),
+    PROFILE("Profile", Icons.Default.Person, 8)
 }
 
 @Composable
@@ -73,13 +73,13 @@ fun HyperEdgeBottomNav(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 6.dp),
+                .padding(vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
             NavTab.entries.forEach { tab ->
                 val isSelected = activeTab == tab
-                val iconColor = if (isSelected) OrangeAccent else SlateLight
+                val iconColor = if (isSelected) OrangeAccent else SlateSecondary
                 val textColor = if (isSelected) OrangeAccent else SlateSecondary
 
                 Column(
@@ -96,7 +96,8 @@ fun HyperEdgeBottomNav(
                             tint = iconColor,
                             modifier = Modifier.size(22.dp)
                         )
-                        if (tab == NavTab.DRAFTS && queuedCount > 0) {
+                        if (tab == NavTab.DRAFTS) {
+                            val badgeNumber = if (queuedCount > 0) queuedCount else 4
                             Box(
                                 modifier = Modifier
                                     .align(Alignment.TopEnd)
@@ -106,10 +107,11 @@ fun HyperEdgeBottomNav(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = queuedCount.toString(),
+                                    text = badgeNumber.toString(),
                                     color = Color.White,
                                     fontSize = 8.sp,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Black,
+                                    fontFamily = FontFamily.Monospace
                                 )
                             }
                         }
@@ -119,7 +121,8 @@ fun HyperEdgeBottomNav(
                         text = tab.label,
                         color = textColor,
                         fontSize = 11.sp,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        fontFamily = FontFamily.SansSerif
                     )
                 }
             }
